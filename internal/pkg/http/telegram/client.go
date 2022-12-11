@@ -6,11 +6,7 @@ import (
 	"log"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-)
-
-const (
-	timeout = 60
-	offset  = 0
+	"github.com/olezhek28/system-design-party-bot/internal/config"
 )
 
 type Client interface {
@@ -20,15 +16,18 @@ type Client interface {
 
 type client struct {
 	tgBot *tgBotAPI.BotAPI
+	cfg   config.TelegramBotConfig
 }
 
-func NewClient(tgClient *tgBotAPI.BotAPI) Client {
-	return &client{tgBot: tgClient}
+func NewClient(tgBot *tgBotAPI.BotAPI, cfg config.TelegramBotConfig) Client {
+	return &client{
+		tgBot: tgBot,
+		cfg:   cfg,
+	}
 }
 
 func (c *client) Start() (tgBotAPI.UpdatesChannel, error) {
 	log.Printf("Authorized on account %s", c.tgBot.Self.UserName)
-
 	return c.initUpdatesChannel(), nil
 }
 
@@ -38,8 +37,8 @@ func (c *client) Send(msg tgBotAPI.MessageConfig) error {
 }
 
 func (c *client) initUpdatesChannel() tgBotAPI.UpdatesChannel {
-	u := tgBotAPI.NewUpdate(offset)
-	u.Timeout = timeout
+	u := tgBotAPI.NewUpdate(c.cfg.Offset())
+	u.Timeout = c.cfg.Timeout()
 
 	return c.tgBot.GetUpdatesChan(u)
 }
