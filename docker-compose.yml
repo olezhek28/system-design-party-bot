@@ -1,0 +1,16 @@
+version: '3.8'
+
+volumes:
+  postgres_volume:
+
+services:
+  db:
+    image: postgres:14-alpine3.15
+    environment:
+      - "POSTGRES_DB=system-design-party-bot"
+      - "POSTGRES_USER=system-design-party-bot-user"
+      - "POSTGRES_PASSWORD=system-design-party-bot-password"
+    ports:
+      - "54321:5432"
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
