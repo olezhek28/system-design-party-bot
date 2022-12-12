@@ -1,7 +1,15 @@
-package bot
+package main
 
-import "fmt"
+import (
+	"log"
+
+	"github.com/olezhek28/system-design-party-bot/internal/app"
+)
 
 func main() {
-	fmt.Println("Hello, world!")
+	a := app.New()
+	err := a.Run()
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 }

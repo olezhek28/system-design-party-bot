@@ -6,10 +6,13 @@ import (
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/config"
 	"github.com/olezhek28/system-design-party-bot/internal/pkg/http/telegram"
+	"github.com/olezhek28/system-design-party-bot/internal/service/processor"
 )
 
 type serviceProvider struct {
 	telegramClient telegram.Client
+
+	processorService *processor.Service
 }
 
 func NewServiceProvider() *serviceProvider {
@@ -32,4 +35,12 @@ func (s *serviceProvider) GetTelegramClient() telegram.Client {
 	}
 
 	return s.telegramClient
+}
+
+func (s *serviceProvider) GetProcessorService() *processor.Service {
+	if s.processorService == nil {
+		s.processorService = processor.NewService(s.GetTelegramClient())
+	}
+
+	return s.processorService
 }
