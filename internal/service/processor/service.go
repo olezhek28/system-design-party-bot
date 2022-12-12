@@ -1,27 +1,35 @@
 package processor
 
 import (
+	"context"
 	"fmt"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/converter"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/pkg/http/telegram"
+	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 )
 
-type Handler func(msg *model.TelegramMessage) (string, error)
+type Handler func(ctx context.Context, msg *model.TelegramMessage) (string, error)
 
 type Service struct {
 	telegramClient telegram.Client
+
+	meetingRepository meetingRepository.Repository
 }
 
-func NewService(telegramClient telegram.Client) *Service {
+func NewService(
+	telegramClient telegram.Client,
+	meetingRepository meetingRepository.Repository,
+) *Service {
 	return &Service{
-		telegramClient: telegramClient,
+		telegramClient:    telegramClient,
+		meetingRepository: meetingRepository,
 	}
 }
 
-func (s *Service) Run() error {
+func (s *Service) Run(ctx context.Context) error {
 	msgChan, err := s.telegramClient.Start()
 	if err != nil {
 		return err
@@ -39,7 +47,7 @@ func (s *Service) Run() error {
 			continue
 		}
 
-		reply, errHandler := handler(msg)
+		reply, errHandler := handler(ctx, msg)
 		if errHandler != nil {
 			s.telegramClient.Send(tgBotAPI.NewMessage(msg.From.ID, fmt.Sprintf("failed to execute command: %s", errHandler.Error())))
 			continue
@@ -53,6 +61,7 @@ func (s *Service) Run() error {
 
 func (s *Service) getCommandMap() map[string]Handler {
 	return map[string]Handler{
+		"start":        s.Start,
 		"find_speaker": s.FindSpeaker,
 	}
 }

@@ -1,6 +1,9 @@
 package app
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 type App struct {
 	serviceProvider *serviceProvider
@@ -12,14 +15,14 @@ func New() *App {
 	}
 }
 
-func (a *App) Run() error {
-	processorService := a.serviceProvider.GetProcessorService()
+func (a *App) Run(ctx context.Context) error {
+	processorService := a.serviceProvider.GetProcessorService(ctx)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		processorService.Run()
+		processorService.Run(ctx)
 	}()
 
 	wg.Wait()
