@@ -9,23 +9,27 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/pkg/http/telegram"
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
+	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
 )
 
-type Handler func(ctx context.Context, msg *model.TelegramMessage) (string, error)
+type Handler func(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error)
 
 type Service struct {
 	telegramClient telegram.Client
 
 	meetingRepository meetingRepository.Repository
+	topicRepository   topicRepository.Repository
 }
 
 func NewService(
 	telegramClient telegram.Client,
 	meetingRepository meetingRepository.Repository,
+	topicRepository topicRepository.Repository,
 ) *Service {
 	return &Service{
 		telegramClient:    telegramClient,
 		meetingRepository: meetingRepository,
+		topicRepository:   topicRepository,
 	}
 }
 
@@ -53,7 +57,10 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		s.telegramClient.Send(tgBotAPI.NewMessage(msg.From.ID, reply))
+		err = s.telegramClient.Send(reply)
+		if err != nil {
+			fmt.Printf("failed to send message, err: %s\n", err.Error())
+		}
 	}
 
 	return nil
@@ -63,5 +70,21 @@ func (s *Service) getCommandMap() map[string]Handler {
 	return map[string]Handler{
 		"start":        s.Start,
 		"find_speaker": s.FindSpeaker,
+		"list_topics":  s.ListTopics,
 	}
+}
+
+func getCommandKeyboard() tgBotAPI.ReplyKeyboardMarkup {
+	return tgBotAPI.NewReplyKeyboard(
+		tgBotAPI.NewKeyboardButtonRow(
+			tgBotAPI.NewKeyboardButton("/list_topics"),
+			tgBotAPI.NewKeyboardButton("2"),
+			tgBotAPI.NewKeyboardButton("3"),
+		),
+		tgBotAPI.NewKeyboardButtonRow(
+			tgBotAPI.NewKeyboardButton("4"),
+			tgBotAPI.NewKeyboardButton("5"),
+			tgBotAPI.NewKeyboardButton("6"),
+		),
+	)
 }

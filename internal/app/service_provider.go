@@ -9,6 +9,7 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/pkg/db"
 	"github.com/olezhek28/system-design-party-bot/internal/pkg/http/telegram"
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
+	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
 	"github.com/olezhek28/system-design-party-bot/internal/service/processor"
 )
 
@@ -18,6 +19,7 @@ type serviceProvider struct {
 	telegramClient telegram.Client
 
 	meetingRepository meetingRepository.Repository
+	topicRepository   topicRepository.Repository
 
 	processorService *processor.Service
 }
@@ -70,9 +72,21 @@ func (s *serviceProvider) GetMeetingRepository(ctx context.Context) meetingRepos
 	return s.meetingRepository
 }
 
+func (s *serviceProvider) GetTopicRepository(ctx context.Context) topicRepository.Repository {
+	if s.topicRepository == nil {
+		s.topicRepository = topicRepository.NewRepository(s.GetDB(ctx))
+	}
+
+	return s.topicRepository
+}
+
 func (s *serviceProvider) GetProcessorService(ctx context.Context) *processor.Service {
 	if s.processorService == nil {
-		s.processorService = processor.NewService(s.GetTelegramClient(), s.GetMeetingRepository(ctx))
+		s.processorService = processor.NewService(
+			s.GetTelegramClient(),
+			s.GetMeetingRepository(ctx),
+			s.GetTopicRepository(ctx),
+		)
 	}
 
 	return s.processorService

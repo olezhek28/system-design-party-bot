@@ -3,17 +3,30 @@ package processor
 import (
 	"context"
 	"fmt"
+	"strconv"
 
+	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
+	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
-func (s *Service) FindSpeaker(ctx context.Context, msg *model.TelegramMessage) (string, error) {
-	stats, err := s.meetingRepository.GetSpeakers(ctx)
+func (s *Service) FindSpeaker(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
+	if len(msg.Arguments) == 0 {
+		return tgBotAPI.MessageConfig{}, fmt.Errorf("no arguments")
+	}
+
+	topicID, err := strconv.ParseInt(msg.Arguments[0], 10, 64)
 	if err != nil {
-		return "", err
+		return tgBotAPI.MessageConfig{}, err
+	}
+
+	stats, err := s.meetingRepository.GetSpeakers(ctx, topicID)
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
 	}
 	if len(stats) == 0 {
-		return "No speakers", nil
+		return tgBotAPI.MessageConfig{}, nil
 	}
 
 	speaker := stats[0]
@@ -25,12 +38,23 @@ func (s *Service) FindSpeaker(ctx context.Context, msg *model.TelegramMessage) (
 		}
 	}
 
-	//res := strings.Builder{}
-	//for _, stat := range stats {
-	//	res.WriteString(fmt.Sprintf("%s %s (%s) TopicID: %d, Count: %d\n",
-	//		stat.SpeakerFirstName, stat.SpeakerLastName, stat.SpeakerTelegramNickname, stat.TopicID, stat.Count))
-	//}
+	t, err := helper.ExecuteTemplate(template.SpeakerDescription, struct {
+		FirstName        string
+		LastName         string
+		TelegramUsername string
+		TopicName        string
+		Count            int64
+	}{
+		FirstName:        speaker.SpeakerFirstName,
+		LastName:         speaker.SpeakerLastName,
+		TelegramUsername: speaker.SpeakerTelegramNickname,
+		TopicName:        speaker.TopicName,
+		Count:            speaker.Count,
+	})
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
+	}
 
-	return fmt.Sprintf("%s %s (%s) TopicID: %d, Count: %d\n",
-		speaker.SpeakerFirstName, speaker.SpeakerLastName, speaker.SpeakerTelegramNickname, speaker.TopicID, speaker.Count), nil
+	reply := tgBotAPI.NewMessage(msg.From.ID, t)
+	return reply, nil
 }

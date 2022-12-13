@@ -14,11 +14,12 @@ import (
 const (
 	meetingTable = "meeting"
 	studentTable = "student"
+	topicTable   = "topic"
 )
 
 // Repository ...
 type Repository interface {
-	GetSpeakers(ctx context.Context) ([]*model.Stats, error)
+	GetSpeakers(ctx context.Context, topicID int64) ([]*model.Stats, error)
 }
 
 type repository struct {
@@ -34,12 +35,14 @@ func NewRepository(db db.Client) *repository {
 
 // select topic_id, s.first_name, s.last_name, count(*) from meeting m join student s on m.speaker_id = s.id group by topic_id, s.first_name, s.last_name,status having status='success';
 // GetSpeakers ...
-func (r *repository) GetSpeakers(ctx context.Context) ([]*model.Stats, error) {
-	builder := sq.Select("m.topic_id, s.first_name, s.last_name, s.telegram_username, count(*) ").
+func (r *repository) GetSpeakers(ctx context.Context, topicID int64) ([]*model.Stats, error) {
+	builder := sq.Select("t.name, s.first_name, s.last_name, s.telegram_username, count(*) ").
 		PlaceholderFormat(sq.Dollar).
 		From(meetingTable + " m").
 		Join(studentTable + " s on m.speaker_id=s.id").
-		GroupBy("m.topic_id, s.first_name, s.last_name, s.telegram_username, m.status").
+		Join(topicTable + " t on m.topic_id=t.id").
+		Where(sq.Eq{"m.topic_id": topicID}).
+		GroupBy("t.name, s.first_name, s.last_name, s.telegram_username, m.status").
 		Having("m.status='success'")
 
 	query, v, err := builder.ToSql()
