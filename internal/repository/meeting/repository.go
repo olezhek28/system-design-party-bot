@@ -20,6 +20,8 @@ const (
 // Repository ...
 type Repository interface {
 	GetSpeakers(ctx context.Context, topicID int64) ([]*model.Stats, error)
+	GetSuccessMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error)
+	GetSuccessMeeting(ctx context.Context) ([]*model.Meeting, error)
 }
 
 type repository struct {
@@ -33,7 +35,6 @@ func NewRepository(db db.Client) *repository {
 	}
 }
 
-// select topic_id, s.first_name, s.last_name, count(*) from meeting m join student s on m.speaker_id = s.id group by topic_id, s.first_name, s.last_name,status having status='success';
 // GetSpeakers ...
 func (r *repository) GetSpeakers(ctx context.Context, topicID int64) ([]*model.Stats, error) {
 	builder := sq.Select("t.name, s.first_name, s.last_name, s.telegram_username, count(*) ").
@@ -56,6 +57,57 @@ func (r *repository) GetSpeakers(ctx context.Context, topicID int64) ([]*model.S
 	}
 
 	var res []*model.Stats
+	err = r.db.DB().SelectContext(ctx, &res, q, v...)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *repository) GetSuccessMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error) {
+	builder := sq.Select("id, topic_id, status, start_date, speaker_id, listener_id, created_at").
+		PlaceholderFormat(sq.Dollar).
+		From(meetingTable).
+		Where(sq.Eq{"speaker_id": speakerID}).
+		Where(sq.Eq{"status": "success"})
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "meeting_repository.GetSuccessMeetingBySpeaker",
+		QueryRaw: query,
+	}
+
+	var res []*model.Meeting
+	err = r.db.DB().SelectContext(ctx, &res, q, v...)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *repository) GetSuccessMeeting(ctx context.Context) ([]*model.Meeting, error) {
+	builder := sq.Select("id, topic_id, status, start_date, speaker_id, listener_id, created_at").
+		PlaceholderFormat(sq.Dollar).
+		From(meetingTable).
+		Where(sq.Eq{"status": "success"})
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "meeting_repository.GetSuccessMeetingByTopic",
+		QueryRaw: query,
+	}
+
+	var res []*model.Meeting
 	err = r.db.DB().SelectContext(ctx, &res, q, v...)
 	if err != nil {
 		return nil, err

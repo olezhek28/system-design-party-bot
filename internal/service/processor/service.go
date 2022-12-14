@@ -9,6 +9,7 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/pkg/http/telegram"
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
+	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
 	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
 )
 
@@ -19,17 +20,20 @@ type Service struct {
 
 	meetingRepository meetingRepository.Repository
 	topicRepository   topicRepository.Repository
+	studentRepository studentRepository.Repository
 }
 
 func NewService(
 	telegramClient telegram.Client,
 	meetingRepository meetingRepository.Repository,
 	topicRepository topicRepository.Repository,
+	studentRepository studentRepository.Repository,
 ) *Service {
 	return &Service{
 		telegramClient:    telegramClient,
 		meetingRepository: meetingRepository,
 		topicRepository:   topicRepository,
+		studentRepository: studentRepository,
 	}
 }
 
@@ -68,9 +72,11 @@ func (s *Service) Run(ctx context.Context) error {
 
 func (s *Service) getCommandMap() map[string]Handler {
 	return map[string]Handler{
-		"start":        s.Start,
-		"find_speaker": s.FindSpeaker,
-		"list_topics":  s.ListTopics,
+		"start":                s.Start,
+		"find_speaker":         s.FindSpeaker,
+		"list_topics":          s.ListTopics,
+		"get_stats_by_speaker": s.GetStatsBySpeaker,
+		"get_topic_stats":      s.GetTopicStats,
 	}
 }
 

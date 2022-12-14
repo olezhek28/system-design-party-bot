@@ -11,7 +11,7 @@ import (
 )
 
 func (s *Service) ListTopics(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	topics, err := s.topicRepository.GetTopicList(ctx)
+	topics, err := s.topicRepository.GetTopicsByIDs(ctx, []int64{})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

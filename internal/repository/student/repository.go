@@ -1,4 +1,4 @@
-package topic_repository
+package student_repository
 
 //go:generate sh -c "rm -rf mocks && mkdir -p mocks"
 //go:generate minimock -i Repository -o ./mocks/ -s "_minimock.go"
@@ -11,11 +11,11 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/pkg/db"
 )
 
-const tableName = "topic"
+const tableName = "student"
 
 // Repository ...
 type Repository interface {
-	GetTopicsByIDs(ctx context.Context, ids []int64) ([]*model.Topic, error)
+	GetStudentByIDs(ctx context.Context, ids []int64) ([]*model.Student, error)
 }
 
 type repository struct {
@@ -23,15 +23,14 @@ type repository struct {
 }
 
 // NewRepository ...
-func NewRepository(db db.Client) *repository {
+func NewRepository(db db.Client) Repository {
 	return &repository{
 		db: db,
 	}
 }
 
-// GetTopicsByIDs ...
-func (r *repository) GetTopicsByIDs(ctx context.Context, ids []int64) ([]*model.Topic, error) {
-	builder := sq.Select("id, name, description, link, created_at, updated_at").
+func (r *repository) GetStudentByIDs(ctx context.Context, ids []int64) ([]*model.Student, error) {
+	builder := sq.Select("id, first_name, last_name, telegram_chat_id, telegram_username, created_at").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName)
 
@@ -45,11 +44,11 @@ func (r *repository) GetTopicsByIDs(ctx context.Context, ids []int64) ([]*model.
 	}
 
 	q := db.Query{
-		Name:     "topic_repository.GetTopicList",
+		Name:     "topic_repository.GetStudentByIDs",
 		QueryRaw: query,
 	}
 
-	var res []*model.Topic
+	var res []*model.Student
 	err = r.db.DB().SelectContext(ctx, &res, q, v...)
 	if err != nil {
 		return nil, err
