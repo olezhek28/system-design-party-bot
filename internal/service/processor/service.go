@@ -118,6 +118,8 @@ func (s *Service) getCommandMap() map[string]Handler {
 		command.GetStatsBySpeaker: s.GetStatsBySpeaker,
 		command.GetTopicStats:     s.GetTopicStats,
 		command.CreateMeeting:     s.CreateMeeting,
+		command.FinishMeeting:     s.FinishMeeting,
+		command.CancelMeeting:     s.CancelMeeting,
 	}
 }
 

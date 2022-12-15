@@ -12,21 +12,37 @@ import (
 )
 
 func (s *Service) Start(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	data := struct {
-		FirstName string
-	}{
-		FirstName: msg.From.FirstName,
-	}
-
-	res, err := helper.ExecuteTemplate(template.StartMsg, data)
+	isExist, err := s.studentRepository.IsExistStudent(ctx, msg.From.ID)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	resMsg := tgBotAPI.NewMessage(msg.From.ID, res)
-	resMsg.ReplyMarkup = getStartKeyboard()
+	if !isExist {
+		err = s.studentRepository.CreateStudent(ctx, &model.Student{
+			FirstName:        msg.From.FirstName,
+			LastName:         msg.From.LastName,
+			TelegramID:       msg.From.ID,
+			TelegramUsername: msg.From.UserName,
+		})
+		if err != nil {
+			return tgBotAPI.MessageConfig{}, err
+		}
+	}
 
-	return resMsg, nil
+	// TODO менять текст в зависимости от того, существовал ли студент в базе ранее (можно даже дату регистрации выводить)
+	res, err := helper.ExecuteTemplate(template.StartMsg, struct {
+		FirstName string
+	}{
+		FirstName: msg.From.FirstName,
+	})
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
+	}
+
+	reply := tgBotAPI.NewMessage(msg.From.ID, res)
+	reply.ReplyMarkup = getStartKeyboard()
+
+	return reply, nil
 }
 
 func getStartKeyboard() tgBotAPI.InlineKeyboardMarkup {

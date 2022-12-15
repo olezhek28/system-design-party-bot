@@ -2,13 +2,13 @@ package processor
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
+	"github.com/pkg/errors"
 )
 
 func (s *Service) GetTopicStats(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
@@ -48,7 +48,7 @@ func (s *Service) GetTopicStats(ctx context.Context, msg *model.TelegramMessage)
 	for tID, topicStats := range stats {
 		topic, ok := topicMap[tID]
 		if !ok {
-			fmt.Errorf("topic with id %d not found\n", tID)
+			errors.Errorf("topic with id %d not found\n", tID)
 			continue
 		}
 
@@ -66,7 +66,7 @@ func (s *Service) GetTopicStats(ctx context.Context, msg *model.TelegramMessage)
 		for speakerID, count := range topicStats {
 			speaker, ok := speakerMap[speakerID]
 			if !ok {
-				fmt.Errorf("speaker with id %d not found\n", speakerID)
+				errors.Errorf("speaker with id %d not found\n", speakerID)
 				continue
 			}
 

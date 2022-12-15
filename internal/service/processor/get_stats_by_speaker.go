@@ -2,7 +2,6 @@ package processor
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -10,11 +9,12 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
+	"github.com/pkg/errors"
 )
 
 func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
 	if len(msg.Arguments) == 0 {
-		return tgBotAPI.MessageConfig{}, fmt.Errorf("no arguments")
+		return tgBotAPI.MessageConfig{}, errors.New("no arguments")
 	}
 
 	speakerID, err := strconv.ParseInt(msg.Arguments[0], 10, 64)
@@ -64,19 +64,19 @@ func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMess
 	for topicID, count := range stats {
 		topic, ok := topicMap[topicID]
 		if !ok {
-			fmt.Errorf("topic with id %d not found\n", topicID)
+			errors.Errorf("topic with id %d not found\n", topicID)
 			continue
 		}
 
-		t, errTmpl := helper.ExecuteTemplate(template.SpeakerStats, struct {
+		t, err = helper.ExecuteTemplate(template.SpeakerStats, struct {
 			TopicName string
 			Count     int64
 		}{
 			TopicName: topic.Name,
 			Count:     count,
 		})
-		if errTmpl != nil {
-			return tgBotAPI.MessageConfig{}, errTmpl
+		if err != nil {
+			return tgBotAPI.MessageConfig{}, err
 		}
 
 		res.WriteString(t + "\n")

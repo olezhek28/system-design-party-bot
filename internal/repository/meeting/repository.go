@@ -19,9 +19,11 @@ const (
 
 // Repository ...
 type Repository interface {
-	GetSpeakers(ctx context.Context, topicID int64) ([]*model.Stats, error)
+	GetSpeakersStats(ctx context.Context, topicID int64, excludeSpeakerTelegramID int64) ([]*model.Stats, error)
 	GetSuccessMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error)
 	GetSuccessMeeting(ctx context.Context) ([]*model.Meeting, error)
+	CreateMeeting(ctx context.Context, meeting *model.Meeting) (int64, error)
+	UpdateMeetingsStatus(ctx context.Context, status string, meetingIDs []int64) error
 }
 
 type repository struct {
@@ -35,8 +37,8 @@ func NewRepository(db db.Client) *repository {
 	}
 }
 
-// GetSpeakers ...
-func (r *repository) GetSpeakers(ctx context.Context, topicID int64) ([]*model.Stats, error) {
+// GetSpeakersStats ...
+func (r *repository) GetSpeakersStats(ctx context.Context, topicID int64, excludeSpeakerTelegramID int64) ([]*model.Stats, error) {
 	builder := sq.Select("t.name, s.id, s.first_name, s.last_name, s.telegram_username, count(*) ").
 		PlaceholderFormat(sq.Dollar).
 		From(meetingTable + " m").
@@ -44,7 +46,10 @@ func (r *repository) GetSpeakers(ctx context.Context, topicID int64) ([]*model.S
 		Join(topicTable + " t on m.topic_id=t.id").
 		Where(sq.Eq{"m.topic_id": topicID}).
 		GroupBy("t.name, s.id, s.first_name, s.last_name, s.telegram_username, m.status").
-		Having("m.status='success'")
+		Having(sq.And{
+			sq.Eq{"m.status": model.MeetingStatusFinished},
+			sq.NotEq{"s.telegram_id": excludeSpeakerTelegramID},
+		})
 
 	query, v, err := builder.ToSql()
 	if err != nil {
@@ -52,7 +57,7 @@ func (r *repository) GetSpeakers(ctx context.Context, topicID int64) ([]*model.S
 	}
 
 	q := db.Query{
-		Name:     "meeting_repository.GetSpeakers",
+		Name:     "meeting_repository.GetSpeakersStats",
 		QueryRaw: query,
 	}
 
@@ -70,7 +75,7 @@ func (r *repository) GetSuccessMeetingBySpeaker(ctx context.Context, speakerID i
 		PlaceholderFormat(sq.Dollar).
 		From(meetingTable).
 		Where(sq.Eq{"speaker_id": speakerID}).
-		Where(sq.Eq{"status": "success"})
+		Where(sq.Eq{"status": model.MeetingStatusFinished})
 
 	query, v, err := builder.ToSql()
 	if err != nil {
@@ -95,7 +100,7 @@ func (r *repository) GetSuccessMeeting(ctx context.Context) ([]*model.Meeting, e
 	builder := sq.Select("id, topic_id, status, start_date, speaker_id, listener_id, created_at").
 		PlaceholderFormat(sq.Dollar).
 		From(meetingTable).
-		Where(sq.Eq{"status": "success"})
+		Where(sq.Eq{"status": model.MeetingStatusFinished})
 
 	query, v, err := builder.ToSql()
 	if err != nil {
@@ -114,4 +119,54 @@ func (r *repository) GetSuccessMeeting(ctx context.Context) ([]*model.Meeting, e
 	}
 
 	return res, nil
+}
+
+func (r *repository) CreateMeeting(ctx context.Context, meeting *model.Meeting) (int64, error) {
+	builder := sq.Insert(meetingTable).
+		PlaceholderFormat(sq.Dollar).
+		Columns("topic_id", "status", "start_date", "speaker_id", "listener_id").
+		Values(meeting.TopicID, meeting.Status, meeting.StartDate, meeting.SpeakerID, meeting.ListenerID).
+		Suffix("RETURNING id")
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	q := db.Query{
+		Name:     "meeting_repository.CreateMeeting",
+		QueryRaw: query,
+	}
+
+	var id int64
+	err = r.db.DB().GetContext(ctx, &id, q, v...)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (r *repository) UpdateMeetingsStatus(ctx context.Context, status string, meetingIDs []int64) error {
+	builder := sq.Update(meetingTable).
+		PlaceholderFormat(sq.Dollar).
+		Set("status", status).
+		Where(sq.Eq{"id": meetingIDs})
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	q := db.Query{
+		Name:     "meeting_repository.UpdateMeetingStatus",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, v...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

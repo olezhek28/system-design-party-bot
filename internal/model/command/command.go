@@ -7,4 +7,6 @@ const (
 	GetStatsBySpeaker = "get_stats_by_speaker"
 	GetTopicStats     = "get_topic_stats"
 	CreateMeeting     = "create_meeting"
+	CancelMeeting     = "cancel_meeting"
+	FinishMeeting     = "finish_meeting"
 )

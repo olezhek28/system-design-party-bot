@@ -2,6 +2,15 @@ package model
 
 import "time"
 
+const (
+	// MeetingStatusNew - new meeting
+	MeetingStatusNew = "new"
+	// MeetingStatusCanceled - canceled meeting
+	MeetingStatusCanceled = "canceled"
+	// MeetingStatusFinished - finished meeting
+	MeetingStatusFinished = "finished"
+)
+
 type Meeting struct {
 	ID         int64     `db:"id"`
 	TopicID    int64     `db:"topic_id"`
