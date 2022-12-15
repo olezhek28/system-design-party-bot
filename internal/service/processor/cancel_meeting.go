@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// TODO не давать менять статус встречи, если она уже завершена
 func (s *Service) CancelMeeting(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
 	if len(msg.Arguments) < 2 {
 		return tgBotAPI.MessageConfig{}, errors.New("no arguments")
