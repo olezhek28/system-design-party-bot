@@ -2,11 +2,13 @@ package processor
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
+	"github.com/olezhek28/system-design-party-bot/internal/model/command"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
@@ -48,5 +50,19 @@ func (s *Service) ListTopics(ctx context.Context, msg *model.TelegramMessage) (t
 	res.WriteString(t)
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, res.String())
+	reply.ReplyMarkup = getTopicsKeyboard(topics)
+
 	return reply, nil
+}
+
+func getTopicsKeyboard(topics []*model.Topic) tgBotAPI.InlineKeyboardMarkup {
+	var buttonsInfo []*model.TelegramButtonInfo
+	for _, topic := range topics {
+		buttonsInfo = append(buttonsInfo, &model.TelegramButtonInfo{
+			Text: fmt.Sprintf("%d", topic.ID),
+			Data: fmt.Sprintf("/%s %d", command.FindSpeaker, topic.ID),
+		})
+	}
+
+	return helper.BuildKeyboard(buttonsInfo)
 }

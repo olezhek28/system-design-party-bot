@@ -8,6 +8,7 @@ import (
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
+	"github.com/olezhek28/system-design-party-bot/internal/model/command"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
@@ -66,7 +67,7 @@ func getMeetKeyboard(msg *model.TelegramMessage, speaker *model.Stats) tgBotAPI.
 		tgBotAPI.NewInlineKeyboardRow(
 			tgBotAPI.NewInlineKeyboardButtonData(
 				fmt.Sprintf("Создать встречу с пользователем %s %s", speaker.SpeakerFirstName, speaker.SpeakerLastName),
-				fmt.Sprintf("/create_meeting %d %d", speaker.SpeakerID, msg.From.ID),
+				fmt.Sprintf("/%s %d %d", command.CreateMeeting, speaker.SpeakerID, msg.From.ID),
 			),
 		),
 	)

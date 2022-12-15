@@ -8,6 +8,7 @@ import (
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/converter"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
+	"github.com/olezhek28/system-design-party-bot/internal/model/command"
 	"github.com/olezhek28/system-design-party-bot/internal/pkg/http/telegram"
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
@@ -111,12 +112,12 @@ func (s *Service) executeCallback(ctx context.Context, event tgBotAPI.Update) (t
 // TODO добавить для каждой команды свой обработчик аргументов в одном месте, а не в каждом обработчике
 func (s *Service) getCommandMap() map[string]Handler {
 	return map[string]Handler{
-		"start":                s.Start,
-		"find_speaker":         s.FindSpeaker,
-		"list_topics":          s.ListTopics,
-		"get_stats_by_speaker": s.GetStatsBySpeaker,
-		"get_topic_stats":      s.GetTopicStats,
-		"create_meeting":       s.CreateMeeting,
+		command.Start:             s.Start,
+		command.FindSpeaker:       s.FindSpeaker,
+		command.ListTopics:        s.ListTopics,
+		command.GetStatsBySpeaker: s.GetStatsBySpeaker,
+		command.GetTopicStats:     s.GetTopicStats,
+		command.CreateMeeting:     s.CreateMeeting,
 	}
 }
 
