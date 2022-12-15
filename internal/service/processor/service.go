@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/converter"
@@ -11,6 +12,7 @@ import (
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
 	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
+	"github.com/pkg/errors"
 )
 
 type Handler func(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error)
@@ -38,27 +40,24 @@ func NewService(
 }
 
 func (s *Service) Run(ctx context.Context) error {
-	msgChan, err := s.telegramClient.Start()
-	if err != nil {
-		return err
-	}
+	for event := range s.telegramClient.Start() {
+		var err error
+		var reply tgBotAPI.MessageConfig
+		if event.Message != nil {
+			msg := converter.MessageToTelegramMessage(event.Message)
+			if msg == nil {
+				reply = tgBotAPI.NewMessage(event.Message.Chat.ID, "failed to convert message")
+			}
 
-	for event := range msgChan {
-		msg := converter.ToTelegramMessage(event.Message)
-		if msg == nil {
-			fmt.Errorf("failed to convert message, update id: %d", event.UpdateID)
-		}
-
-		handler, ok := s.getCommandMap()[msg.Command]
-		if !ok {
-			s.telegramClient.Send(tgBotAPI.NewMessage(msg.From.ID, "Unknown command"))
-			continue
-		}
-
-		reply, errHandler := handler(ctx, msg)
-		if errHandler != nil {
-			s.telegramClient.Send(tgBotAPI.NewMessage(msg.From.ID, fmt.Sprintf("failed to execute command: %s", errHandler.Error())))
-			continue
+			reply, err = s.executeCommand(ctx, msg)
+			if err != nil {
+				reply = tgBotAPI.NewMessage(event.Message.Chat.ID, err.Error())
+			}
+		} else {
+			reply, err = s.executeCallback(ctx, event)
+			if err != nil {
+				reply = tgBotAPI.NewMessage(event.CallbackQuery.Message.Chat.ID, err.Error())
+			}
 		}
 
 		err = s.telegramClient.Send(reply)
@@ -70,6 +69,46 @@ func (s *Service) Run(ctx context.Context) error {
 	return nil
 }
 
+func (s *Service) executeCommand(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
+	handler, ok := s.getCommandMap()[msg.Command]
+	if !ok {
+		return tgBotAPI.MessageConfig{}, errors.New("unknown command")
+	}
+
+	reply, err := handler(ctx, msg)
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, errors.Wrap(err, "failed to execute command")
+	}
+
+	return reply, nil
+}
+
+func (s *Service) executeCallback(ctx context.Context, event tgBotAPI.Update) (tgBotAPI.MessageConfig, error) {
+	if strings.HasPrefix(event.CallbackQuery.Data, "/") {
+		msg := converter.CallbackDataToTelegramMessage(event.CallbackQuery)
+		if msg == nil {
+			return tgBotAPI.MessageConfig{}, errors.New("failed to convert message")
+		}
+
+		reply, err := s.executeCommand(ctx, msg)
+		if err != nil {
+			return tgBotAPI.MessageConfig{}, errors.Wrap(err, "failed to execute command")
+		}
+
+		reply.BaseChat.ChatID = event.CallbackQuery.Message.Chat.ID
+		return reply, nil
+	}
+
+	callback := tgBotAPI.NewCallback(event.CallbackQuery.ID, event.CallbackQuery.Data)
+	_, err := s.telegramClient.Request(callback)
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, errors.Wrap(err, "failed to request callback")
+	}
+
+	return tgBotAPI.NewMessage(event.CallbackQuery.Message.Chat.ID, event.CallbackQuery.Data), nil
+}
+
+// TODO добавить для каждой команды свой обработчик аргументов в одном месте, а не в каждом обработчике
 func (s *Service) getCommandMap() map[string]Handler {
 	return map[string]Handler{
 		"start":                s.Start,
@@ -77,6 +116,7 @@ func (s *Service) getCommandMap() map[string]Handler {
 		"list_topics":          s.ListTopics,
 		"get_stats_by_speaker": s.GetStatsBySpeaker,
 		"get_topic_stats":      s.GetTopicStats,
+		"create_meeting":       s.CreateMeeting,
 	}
 }
 

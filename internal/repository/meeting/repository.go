@@ -37,13 +37,13 @@ func NewRepository(db db.Client) *repository {
 
 // GetSpeakers ...
 func (r *repository) GetSpeakers(ctx context.Context, topicID int64) ([]*model.Stats, error) {
-	builder := sq.Select("t.name, s.first_name, s.last_name, s.telegram_username, count(*) ").
+	builder := sq.Select("t.name, s.id, s.first_name, s.last_name, s.telegram_username, count(*) ").
 		PlaceholderFormat(sq.Dollar).
 		From(meetingTable + " m").
 		Join(studentTable + " s on m.speaker_id=s.id").
 		Join(topicTable + " t on m.topic_id=t.id").
 		Where(sq.Eq{"m.topic_id": topicID}).
-		GroupBy("t.name, s.first_name, s.last_name, s.telegram_username, m.status").
+		GroupBy("t.name, s.id, s.first_name, s.last_name, s.telegram_username, m.status").
 		Having("m.status='success'")
 
 	query, v, err := builder.ToSql()

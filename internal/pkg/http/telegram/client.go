@@ -10,8 +10,9 @@ import (
 )
 
 type Client interface {
-	Start() (tgBotAPI.UpdatesChannel, error)
+	Start() tgBotAPI.UpdatesChannel
 	Send(msg tgBotAPI.MessageConfig) error
+	Request(c tgBotAPI.Chattable) (*tgBotAPI.APIResponse, error)
 }
 
 type client struct {
@@ -26,9 +27,13 @@ func NewClient(tgBot *tgBotAPI.BotAPI, cfg config.TelegramBotConfig) Client {
 	}
 }
 
-func (c *client) Start() (tgBotAPI.UpdatesChannel, error) {
+func (c *client) Start() tgBotAPI.UpdatesChannel {
 	log.Printf("Authorized on account %s", c.tgBot.Self.UserName)
-	return c.initUpdatesChannel(), nil
+
+	u := tgBotAPI.NewUpdate(c.cfg.Offset())
+	u.Timeout = c.cfg.Timeout()
+
+	return c.tgBot.GetUpdatesChan(u)
 }
 
 func (c *client) Send(msg tgBotAPI.MessageConfig) error {
@@ -36,9 +41,11 @@ func (c *client) Send(msg tgBotAPI.MessageConfig) error {
 	return err
 }
 
-func (c *client) initUpdatesChannel() tgBotAPI.UpdatesChannel {
-	u := tgBotAPI.NewUpdate(c.cfg.Offset())
-	u.Timeout = c.cfg.Timeout()
+func (c *client) Request(callback tgBotAPI.Chattable) (*tgBotAPI.APIResponse, error) {
+	_, err := c.tgBot.Request(callback)
+	if err != nil {
+		return nil, err
+	}
 
-	return c.tgBot.GetUpdatesChan(u)
+	return nil, nil
 }

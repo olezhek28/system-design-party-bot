@@ -9,7 +9,7 @@ type User struct {
 }
 
 type TelegramMessage struct {
-	ID        int
+	ID        int64
 	From      *User
 	Text      string
 	Command   string

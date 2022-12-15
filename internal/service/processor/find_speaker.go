@@ -56,5 +56,18 @@ func (s *Service) FindSpeaker(ctx context.Context, msg *model.TelegramMessage) (
 	}
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, t)
+	reply.ReplyMarkup = getMeetKeyboard(msg, speaker)
+
 	return reply, nil
+}
+
+func getMeetKeyboard(msg *model.TelegramMessage, speaker *model.Stats) tgBotAPI.InlineKeyboardMarkup {
+	return tgBotAPI.NewInlineKeyboardMarkup(
+		tgBotAPI.NewInlineKeyboardRow(
+			tgBotAPI.NewInlineKeyboardButtonData(
+				fmt.Sprintf("Создать встречу с пользователем %s %s", speaker.SpeakerFirstName, speaker.SpeakerLastName),
+				fmt.Sprintf("/create_meeting %d %d", speaker.SpeakerID, msg.From.ID),
+			),
+		),
+	)
 }
