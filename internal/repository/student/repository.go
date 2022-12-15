@@ -20,6 +20,7 @@ type Repository interface {
 	CreateStudent(ctx context.Context, student *model.Student) error
 	IsExistStudent(ctx context.Context, telegramChatID int64) (bool, error)
 	GetRandomStudent(ctx context.Context, excludeSpeakerTelegramID int64) (*model.Student, error)
+	GetStudentList(ctx context.Context) ([]*model.Student, error)
 }
 
 type repository struct {
@@ -167,4 +168,28 @@ func (r *repository) GetRandomStudent(ctx context.Context, excludeSpeakerTelegra
 	}
 
 	return res[0], nil
+}
+
+func (r *repository) GetStudentList(ctx context.Context) ([]*model.Student, error) {
+	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, created_at").
+		PlaceholderFormat(sq.Dollar).
+		From(tableName)
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "topic_repository.GetStudentList",
+		QueryRaw: query,
+	}
+
+	var res []*model.Student
+	err = r.db.DB().SelectContext(ctx, &res, q, v...)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

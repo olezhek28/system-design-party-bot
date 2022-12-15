@@ -71,13 +71,15 @@ func (s *Service) GetTopicStats(ctx context.Context, msg *model.TelegramMessage)
 			}
 
 			t, err = helper.ExecuteTemplate(template.TopicStats, struct {
-				FirstName string
-				LastName  string
-				Count     int64
+				FirstName        string
+				LastName         string
+				TelegramUsername string
+				Count            int64
 			}{
-				FirstName: speaker.FirstName,
-				LastName:  speaker.LastName,
-				Count:     count,
+				FirstName:        speaker.FirstName,
+				LastName:         speaker.LastName,
+				TelegramUsername: speaker.TelegramUsername,
+				Count:            count,
 			})
 			if err != nil {
 				return tgBotAPI.MessageConfig{}, err

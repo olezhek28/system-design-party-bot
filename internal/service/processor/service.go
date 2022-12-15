@@ -120,20 +120,11 @@ func (s *Service) getCommandMap() map[string]Handler {
 		command.CreateMeeting:     s.CreateMeeting,
 		command.FinishMeeting:     s.FinishMeeting,
 		command.CancelMeeting:     s.CancelMeeting,
+		command.GetStudents:       s.GetStudents,
+		// TODO добавить обработчик для команды /help
+		// TODO кто и кому пересказывал и когда
+		// TODO календарь назначения встречь
+		// TODO создание гугл митс встречь
+		// TODO присылание ссылки на гугл митс встреч с датой и временем в общий чат
 	}
-}
-
-func getCommandKeyboard() tgBotAPI.ReplyKeyboardMarkup {
-	return tgBotAPI.NewReplyKeyboard(
-		tgBotAPI.NewKeyboardButtonRow(
-			tgBotAPI.NewKeyboardButton("/list_topics"),
-			tgBotAPI.NewKeyboardButton("2"),
-			tgBotAPI.NewKeyboardButton("3"),
-		),
-		tgBotAPI.NewKeyboardButtonRow(
-			tgBotAPI.NewKeyboardButton("4"),
-			tgBotAPI.NewKeyboardButton("5"),
-			tgBotAPI.NewKeyboardButton("6"),
-		),
-	)
 }

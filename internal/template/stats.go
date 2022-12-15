@@ -10,7 +10,7 @@ const SpeakerStatsIntroduction = `А вот и статистика спикер
 const TopicStatsHeader = `📮 Тему "{{ .TopicName }}" пересказывали:
 `
 
-const TopicStats = `						🧩 {{ .FirstName }} {{ .LastName }} {{ .Count }} раз(а).
+const TopicStats = `						🧩 {{ .FirstName }} {{ .LastName }} (@{{ .TelegramUsername }}) — {{ .Count }} раз(а).
 `
 
 const TopicStatsIntroduction = `Статистика спикеров по разным темам.

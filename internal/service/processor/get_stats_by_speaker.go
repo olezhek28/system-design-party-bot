@@ -47,13 +47,21 @@ func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMess
 		stats[meet.TopicID]++
 	}
 
+	speakers, err := s.studentRepository.GetStudentByIDs(ctx, []int64{speakerID})
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
+	}
+	if len(speakers) == 0 {
+		return tgBotAPI.NewMessage(msg.From.ID, "Что-то я не нашёл такого студента в базе:("), nil
+	}
+
 	res := strings.Builder{}
 	t, err := helper.ExecuteTemplate(template.SpeakerStatsIntroduction, struct {
 		FirstName string
 		LastName  string
 	}{
-		FirstName: msg.From.FirstName,
-		LastName:  msg.From.LastName,
+		FirstName: speakers[0].FirstName,
+		LastName:  speakers[0].LastName,
 	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err

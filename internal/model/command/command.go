@@ -9,4 +9,5 @@ const (
 	CreateMeeting     = "create_meeting"
 	CancelMeeting     = "cancel_meeting"
 	FinishMeeting     = "finish_meeting"
+	GetStudents       = "get_students"
 )

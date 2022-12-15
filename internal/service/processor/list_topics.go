@@ -17,6 +17,9 @@ func (s *Service) ListTopics(ctx context.Context, msg *model.TelegramMessage) (t
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
+	if len(topics) == 0 {
+		return tgBotAPI.NewMessage(msg.From.ID, "🚫 Что-то не нашёл в базе ни одной темы( Спроси у @olezhek28 в чём проблема."), nil
+	}
 
 	type topicInfo struct {
 		ID          int64
