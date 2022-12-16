@@ -130,3 +130,22 @@ func (s *Service) getSpeakerMap(ctx context.Context, meets []*model.Meeting) (ma
 
 	return speakerMap, nil
 }
+
+func (s *Service) getListenerMap(ctx context.Context, meets []*model.Meeting) (map[int64]*model.Student, error) {
+	var listenerIds []int64
+	for _, m := range meets {
+		listenerIds = append(listenerIds, m.ListenerID)
+	}
+
+	listenersInfo, err := s.studentRepository.GetStudentByIDs(ctx, listenerIds)
+	if err != nil {
+		return nil, err
+	}
+
+	listenerMap := make(map[int64]*model.Student)
+	for _, speaker := range listenersInfo {
+		listenerMap[speaker.ID] = speaker
+	}
+
+	return listenerMap, nil
+}

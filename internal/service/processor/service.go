@@ -130,6 +130,11 @@ func (s *Service) getCommandMap() map[string]Handler {
 		command.GetCalendar:       s.GetCalendar,
 		command.SetTimezone:       s.SetTimezone,
 		command.GetTimezone:       s.GetTimezone,
+		command.PickYear:          s.PickYear,
+		command.PickMonth:         s.PickMonth,
+		command.PickDay:           s.PickDay,
+		command.PickHour:          s.PickHour,
+		command.PickMin:           s.PickMin,
 		// TODO добавить обработчик для команды /help
 		// TODO кто и кому пересказывал и когда
 		// TODO календарь назначения встречь
@@ -139,5 +144,6 @@ func (s *Service) getCommandMap() map[string]Handler {
 		// TODO добавить крон, который чекает встречи по времени и если осталось чутка до встречи напоминает о ней участникам
 		// TODO добавить в шаблоны хтмл тегов
 		// TODO добавить в шаблоны генерацию эмодзи
+		// TODO Хранить инфу о ДР, чтоб поздравлять
 	}
 }

@@ -13,4 +13,10 @@ const (
 	GetCalendar       = "get_calendar"
 	SetTimezone       = "set_timezone"
 	GetTimezone       = "get_timezone"
+
+	PickYear  = "pick_year"
+	PickMonth = "pick_month"
+	PickDay   = "pick_day"
+	PickHour  = "pick_hour"
+	PickMin   = "pick_min"
 )

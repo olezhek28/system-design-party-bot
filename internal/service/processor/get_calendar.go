@@ -13,6 +13,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const timeFormat = "02-Jan-2006 15:04"
+
 func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
 	user, err := s.studentRepository.GetStudentByTelegramChatIDs(ctx, []int64{msg.From.ID})
 	if err != nil {
@@ -42,6 +44,11 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 		return tgBotAPI.MessageConfig{}, err
 	}
 
+	listenerMap, err := s.getListenerMap(ctx, meets)
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
+	}
+
 	res := strings.Builder{}
 	t, err := helper.ExecuteTemplate(template.CalendarDescription, nil)
 	if err != nil {
@@ -63,7 +70,7 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 			continue
 		}
 
-		listener, ok := speakerMap[m.ListenerID]
+		listener, ok := listenerMap[m.ListenerID]
 		if !ok {
 			errors.Errorf("listener with id %d not found\n", m.ListenerID)
 			continue
@@ -86,7 +93,7 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 			ListenerLastName:         listener.LastName,
 			ListenerTelegramUsername: listener.TelegramUsername,
 			TopicName:                topic.Name,
-			StartDate:                m.StartDate.Add(timezone).Format("02-Jan-2006 15:04"),
+			StartDate:                m.StartDate.Add(timezone).Format(timeFormat),
 		})
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
