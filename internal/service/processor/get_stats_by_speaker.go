@@ -91,5 +91,6 @@ func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMess
 	}
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, res.String())
+	reply.ParseMode = tgBotAPI.ModeHTML
 	return reply, nil
 }

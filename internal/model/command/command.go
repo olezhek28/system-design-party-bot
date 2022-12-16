@@ -10,4 +10,7 @@ const (
 	CancelMeeting     = "cancel_meeting"
 	FinishMeeting     = "finish_meeting"
 	GetStudents       = "get_students"
+	GetCalendar       = "get_calendar"
+	SetTimezone       = "set_timezone"
+	GetTimezone       = "get_timezone"
 )

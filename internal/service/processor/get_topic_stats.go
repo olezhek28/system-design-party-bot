@@ -12,7 +12,7 @@ import (
 )
 
 func (s *Service) GetTopicStats(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	meets, err := s.meetingRepository.GetSuccessMeeting(ctx)
+	meets, err := s.meetingRepository.GetMeetingsByStatus(ctx, model.MeetingStatusFinished)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

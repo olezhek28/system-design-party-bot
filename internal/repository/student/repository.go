@@ -21,6 +21,8 @@ type Repository interface {
 	IsExistStudent(ctx context.Context, telegramChatID int64) (bool, error)
 	GetRandomStudent(ctx context.Context, excludeSpeakerTelegramID int64) (*model.Student, error)
 	GetStudentList(ctx context.Context) ([]*model.Student, error)
+	SetTimezone(ctx context.Context, telegramID int64, timezone int64) (int64, error)
+	GetTimezone(ctx context.Context, telegramID int64) (int64, error)
 }
 
 type repository struct {
@@ -35,7 +37,7 @@ func NewRepository(db db.Client) Repository {
 }
 
 func (r *repository) GetStudentByIDs(ctx context.Context, ids []int64) ([]*model.Student, error) {
-	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, created_at").
+	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, timezone, created_at").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName)
 
@@ -63,7 +65,7 @@ func (r *repository) GetStudentByIDs(ctx context.Context, ids []int64) ([]*model
 }
 
 func (r *repository) GetStudentByTelegramChatIDs(ctx context.Context, ids []int64) ([]*model.Student, error) {
-	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, created_at").
+	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, timezone, created_at").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName)
 
@@ -141,7 +143,7 @@ func (r *repository) IsExistStudent(ctx context.Context, telegramChatID int64) (
 }
 
 func (r *repository) GetRandomStudent(ctx context.Context, excludeSpeakerTelegramID int64) (*model.Student, error) {
-	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, created_at").
+	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, timezone, created_at").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
 		OrderBy("RANDOM()").
@@ -171,7 +173,7 @@ func (r *repository) GetRandomStudent(ctx context.Context, excludeSpeakerTelegra
 }
 
 func (r *repository) GetStudentList(ctx context.Context) ([]*model.Student, error) {
-	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, created_at").
+	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, timezone, created_at").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName)
 
@@ -192,4 +194,57 @@ func (r *repository) GetStudentList(ctx context.Context) ([]*model.Student, erro
 	}
 
 	return res, nil
+}
+
+func (r *repository) SetTimezone(ctx context.Context, telegramID int64, timezone int64) (int64, error) {
+	builder := sq.Update(tableName).
+		PlaceholderFormat(sq.Dollar).
+		Set("timezone", timezone).
+		Where(sq.Eq{"telegram_id": telegramID})
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	q := db.Query{
+		Name:     "topic_repository.SetTimezone",
+		QueryRaw: query,
+	}
+
+	res, err := r.db.DB().ExecContext(ctx, q, v...)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.RowsAffected(), nil
+}
+
+func (r *repository) GetTimezone(ctx context.Context, telegramID int64) (int64, error) {
+	builder := sq.Select("timezone").
+		PlaceholderFormat(sq.Dollar).
+		From(tableName).
+		Where(sq.Eq{"telegram_id": telegramID}).
+		Limit(1)
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	q := db.Query{
+		Name:     "topic_repository.GetTimezone",
+		QueryRaw: query,
+	}
+
+	var res []int64
+	err = r.db.DB().SelectContext(ctx, &res, q, v...)
+	if err != nil {
+		return 0, err
+	}
+	if len(res) == 0 {
+		return -1, nil
+	}
+
+	return res[0], nil
 }

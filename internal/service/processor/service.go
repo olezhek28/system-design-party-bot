@@ -81,10 +81,16 @@ func (s *Service) executeCommand(ctx context.Context, msg *model.TelegramMessage
 		return tgBotAPI.MessageConfig{}, errors.Wrap(err, "failed to execute command")
 	}
 
+	reply.Text = reply.Text + model.Line
+
 	return reply, nil
 }
 
 func (s *Service) executeCallback(ctx context.Context, event tgBotAPI.Update) (tgBotAPI.MessageConfig, error) {
+	if event.CallbackQuery == nil {
+		return tgBotAPI.MessageConfig{}, nil
+	}
+
 	if strings.HasPrefix(event.CallbackQuery.Data, "/") {
 		msg := converter.CallbackDataToTelegramMessage(event.CallbackQuery)
 		if msg == nil {
@@ -121,10 +127,17 @@ func (s *Service) getCommandMap() map[string]Handler {
 		command.FinishMeeting:     s.FinishMeeting,
 		command.CancelMeeting:     s.CancelMeeting,
 		command.GetStudents:       s.GetStudents,
+		command.GetCalendar:       s.GetCalendar,
+		command.SetTimezone:       s.SetTimezone,
+		command.GetTimezone:       s.GetTimezone,
 		// TODO добавить обработчик для команды /help
 		// TODO кто и кому пересказывал и когда
 		// TODO календарь назначения встречь
 		// TODO создание гугл митс встречь
 		// TODO присылание ссылки на гугл митс встреч с датой и временем в общий чат
+		// TODO добавить команду /add_topic
+		// TODO добавить крон, который чекает встречи по времени и если осталось чутка до встречи напоминает о ней участникам
+		// TODO добавить в шаблоны хтмл тегов
+		// TODO добавить в шаблоны генерацию эмодзи
 	}
 }
