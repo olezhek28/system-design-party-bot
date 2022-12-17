@@ -51,11 +51,13 @@ func (s *Service) GetSocialConnections(ctx context.Context, msg *model.TelegramM
 		}
 
 		t, err = helper.ExecuteTemplate(template.SocialConnectionStudentName, struct {
-			StudentFirstName string
-			StudentLastName  string
+			StudentFirstName        string
+			StudentLastName         string
+			StudentTelegramUsername string
 		}{
-			StudentFirstName: studentInfo.FirstName,
-			StudentLastName:  studentInfo.LastName,
+			StudentFirstName:        studentInfo.FirstName,
+			StudentLastName:         studentInfo.LastName,
+			StudentTelegramUsername: studentInfo.TelegramUsername,
 		})
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
@@ -65,11 +67,34 @@ func (s *Service) GetSocialConnections(ctx context.Context, msg *model.TelegramM
 
 		for _, partner := range partners {
 			t, err = helper.ExecuteTemplate(template.SocialConnection, struct {
-				PartnerFirstName string
-				PartnerLastName  string
+				PartnerFirstName        string
+				PartnerLastName         string
+				PartnerTelegramUsername string
 			}{
-				PartnerFirstName: partner.FirstName,
-				PartnerLastName:  partner.LastName,
+				PartnerFirstName:        partner.FirstName,
+				PartnerLastName:         partner.LastName,
+				PartnerTelegramUsername: partner.TelegramUsername,
+			})
+			if err != nil {
+				return tgBotAPI.MessageConfig{}, err
+			}
+
+			res.WriteString(t)
+		}
+
+		for _, student := range students {
+			if _, ok = partners[student.ID]; ok {
+				continue
+			}
+
+			t, err = helper.ExecuteTemplate(template.SocialNotConnection, struct {
+				PartnerFirstName        string
+				PartnerLastName         string
+				PartnerTelegramUsername string
+			}{
+				PartnerFirstName:        student.FirstName,
+				PartnerLastName:         student.LastName,
+				PartnerTelegramUsername: student.TelegramUsername,
 			})
 			if err != nil {
 				return tgBotAPI.MessageConfig{}, err
