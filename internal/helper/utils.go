@@ -22,20 +22,20 @@ func SplitSlice(data []*model.TelegramButtonInfo, chunkSize int) [][]*model.Tele
 	return chunks
 }
 
-func GetMonthList() []string {
-	return []string{
-		"Январь",
-		"Февраль",
-		"Март",
-		"Апрель",
-		"Май",
-		"Июнь",
-		"Июль",
-		"Август",
-		"Сентябрь",
-		"Октябрь",
-		"Ноябрь",
-		"Декабрь",
+func GetMonthList() map[int64]string {
+	return map[int64]string{
+		1:  "Январь",
+		2:  "Февраль",
+		3:  "Март",
+		4:  "Апрель",
+		5:  "Май",
+		6:  "Июнь",
+		7:  "Июль",
+		8:  "Август",
+		9:  "Сентябрь",
+		10: "Октябрь",
+		11: "Ноябрь",
+		12: "Декабрь",
 	}
 }
 
@@ -85,4 +85,21 @@ func SliceToString(data []string) string {
 	}
 
 	return str.String()
+}
+
+func GetInexperiencedSpeaker(stats []*model.Stats) int64 {
+	if len(stats) == 0 {
+		return 0
+	}
+
+	id := stats[0].SpeakerID
+	minCount := stats[0].Count
+	for _, stat := range stats {
+		if stat.Count < minCount {
+			minCount = stat.Count
+			id = stat.SpeakerID
+		}
+	}
+
+	return id
 }

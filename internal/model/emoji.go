@@ -18,9 +18,9 @@ const ThingsEmojis = "⌚️📱📲💻⌨️🖥🖨🖱🖲🕹🗜💽💾�
 const CalendarEmojis = "📅📆🗓📇🗒🗓📆📈📉📊📋📌📍📎🖇📏📐📕📗📘📙📓📔📒📚📖🔖🔗📎🖇📐📏🧮📌📍"
 
 func GetEmoji(emojiSet ...string) string {
-	var set string
+	set := DefaultEmojis
 	if len(emojiSet) == 0 {
-		set = DefaultEmojis
+		return set
 	}
 
 	builder := strings.Builder{}

@@ -3,9 +3,7 @@ package processor
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"time"
-	"unicode/utf8"
+	"strconv"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
@@ -20,7 +18,20 @@ func (s *Service) GetStudents(ctx context.Context, msg *model.TelegramMessage) (
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	t, err := helper.ExecuteTemplate(template.StudentDescription, struct {
+	autoChoiceSpeaker := true
+	if len(msg.Arguments) == 1 {
+		autoChoiceSpeaker, err = strconv.ParseBool(msg.Arguments[0])
+		if err != nil {
+			return tgBotAPI.MessageConfig{}, err
+		}
+	}
+
+	tmpl := template.StudentStatsDescription
+	if !autoChoiceSpeaker {
+		tmpl = template.StudentCreateMeetingDescription
+	}
+
+	t, err := helper.ExecuteTemplate(tmpl, struct {
 		Emoji string
 	}{
 		Emoji: model.GetEmoji(model.PlantsEmojis),
@@ -30,12 +41,15 @@ func (s *Service) GetStudents(ctx context.Context, msg *model.TelegramMessage) (
 	}
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, t)
-	reply.ReplyMarkup = getStudentsKeyboard(students)
+	reply.ReplyMarkup = getStudentsWithStatsKeyboard(students)
+	if !autoChoiceSpeaker {
+		reply.ReplyMarkup = getStudentsWithListTopicsKeyboard(excludeStudents(students, []int64{msg.From.ID}), msg.Arguments)
+	}
 
 	return reply, nil
 }
 
-func getStudentsKeyboard(students []*model.Student) tgBotAPI.InlineKeyboardMarkup {
+func getStudentsWithStatsKeyboard(students []*model.Student) tgBotAPI.InlineKeyboardMarkup {
 	var buttonsInfo []*model.TelegramButtonInfo
 	for _, st := range students {
 		text, err := getStudentText(st)
@@ -50,19 +64,34 @@ func getStudentsKeyboard(students []*model.Student) tgBotAPI.InlineKeyboardMarku
 		})
 	}
 
-	return helper.BuildKeyboard(buttonsInfo)
+	return helper.BuildKeyboard(buttonsInfo, 2)
+}
+
+func getStudentsWithListTopicsKeyboard(students []*model.Student, args []string) tgBotAPI.InlineKeyboardMarkup {
+	var buttonsInfo []*model.TelegramButtonInfo
+	for _, st := range students {
+		text, err := getStudentText(st)
+		if err != nil {
+			fmt.Printf("error while getting student text: %v", err)
+			continue
+		}
+
+		buttonsInfo = append(buttonsInfo, &model.TelegramButtonInfo{
+			Text: text,
+			Data: fmt.Sprintf("/%s %s %d", command.ListTopics, helper.SliceToString(args), st.ID),
+		})
+	}
+
+	return helper.BuildKeyboard(buttonsInfo, 2)
 }
 
 func getStudentText(student *model.Student) (string, error) {
-	rand.Seed(time.Now().UnixNano())
-	emoji := []rune(model.VegetablesEmojis)[rand.Intn(utf8.RuneCountInString(model.VegetablesEmojis))]
-
 	t, err := helper.ExecuteTemplate(template.StudentInfo, struct {
 		Emoji     string
 		FirstName string
 		LastName  string
 	}{
-		Emoji:     string(emoji),
+		Emoji:     model.GetEmoji(model.VegetablesEmojis),
 		FirstName: student.FirstName,
 		LastName:  student.LastName,
 	})
@@ -71,4 +100,20 @@ func getStudentText(student *model.Student) (string, error) {
 	}
 
 	return t, nil
+}
+
+func excludeStudents(students []*model.Student, studentTelegramIDs []int64) []*model.Student {
+	excludeMap := make(map[int64]struct{}, len(studentTelegramIDs))
+	for _, id := range studentTelegramIDs {
+		excludeMap[id] = struct{}{}
+	}
+
+	res := make([]*model.Student, 0, len(students))
+	for _, st := range students {
+		if _, ok := excludeMap[st.TelegramID]; !ok {
+			res = append(res, st)
+		}
+	}
+
+	return res
 }

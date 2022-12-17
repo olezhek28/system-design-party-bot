@@ -16,7 +16,7 @@ func (s *Service) PickHour(ctx context.Context, msg *model.TelegramMessage) (tgB
 		return tgBotAPI.MessageConfig{}, errors.New("no arguments")
 	}
 
-	reply := tgBotAPI.NewMessage(msg.From.ID, "Выбери минуты\n")
+	reply := tgBotAPI.NewMessage(msg.From.ID, fmt.Sprintf("%s И наконец минута\n", model.GetEmoji(model.ThingsEmojis)))
 	reply.ReplyMarkup = getPickMinuteKeyboard(msg.Arguments)
 
 	return reply, nil
@@ -31,5 +31,5 @@ func getPickMinuteKeyboard(args []string) tgBotAPI.InlineKeyboardMarkup {
 		})
 	}
 
-	return helper.BuildKeyboard(buttonsInfo)
+	return helper.BuildKeyboard(buttonsInfo, 3)
 }

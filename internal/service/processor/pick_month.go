@@ -27,11 +27,17 @@ func (s *Service) PickMonth(ctx context.Context, msg *model.TelegramMessage) (tg
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	reply := tgBotAPI.NewMessage(msg.From.ID, "Выбери день\n")
+	reply := tgBotAPI.NewMessage(msg.From.ID, fmt.Sprintf("%s Мне бы ещё узнать какой день\n", model.GetEmoji(model.ThingsEmojis)))
 	reply.ReplyMarkup = getPickDaysKeyboard(helper.GetDaysInMonth(year, month), msg.Arguments)
 
 	return reply, nil
 }
+
+// TODO: группировать дни как календарь с днями недели
+// TODO: добавить кнопку "Сегодня"
+// TODO: добавить кнопку "Завтра"
+// TODO: добавить кнопку "Послезавтра"
+// TODO: выдавать текущий месяц и следующий
 
 func getPickDaysKeyboard(dayList []int64, args []string) tgBotAPI.InlineKeyboardMarkup {
 	var buttonsInfo []*model.TelegramButtonInfo
@@ -42,5 +48,5 @@ func getPickDaysKeyboard(dayList []int64, args []string) tgBotAPI.InlineKeyboard
 		})
 	}
 
-	return helper.BuildKeyboard(buttonsInfo)
+	return helper.BuildKeyboard(buttonsInfo, 3)
 }

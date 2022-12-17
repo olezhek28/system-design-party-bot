@@ -7,20 +7,11 @@ import (
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
-	"github.com/olezhek28/system-design-party-bot/internal/model/command"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 	"github.com/pkg/errors"
 )
 
-func (s *Service) GetSocialConnections(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	user, err := s.studentRepository.GetStudentByTelegramChatIDs(ctx, []int64{msg.From.ID})
-	if err != nil {
-		return tgBotAPI.MessageConfig{}, err
-	}
-	if len(user) == 0 {
-		return tgBotAPI.NewMessage(msg.From.ID, "Кажется ты не зарегистрирован:( Для этого нажми /"+command.Start), nil
-	}
-
+func (s *Service) GetAllSocialConnections(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
 	meets, err := s.meetingRepository.GetMeetingsByStatus(ctx, model.MeetingStatusFinished)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err

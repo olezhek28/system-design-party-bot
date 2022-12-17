@@ -5,9 +5,7 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 )
 
-const columnSize = 3
-
-func BuildKeyboard(buttonsInfo []*model.TelegramButtonInfo) tgBotAPI.InlineKeyboardMarkup {
+func BuildKeyboard(buttonsInfo []*model.TelegramButtonInfo, columnSize int) tgBotAPI.InlineKeyboardMarkup {
 	chunks := SplitSlice(buttonsInfo, columnSize)
 
 	var buttons [][]tgBotAPI.InlineKeyboardButton

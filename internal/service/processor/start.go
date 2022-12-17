@@ -45,13 +45,26 @@ func (s *Service) Start(ctx context.Context, msg *model.TelegramMessage) (tgBotA
 	return reply, nil
 }
 
-func getStartKeyboard() tgBotAPI.InlineKeyboardMarkup {
-	return tgBotAPI.NewInlineKeyboardMarkup(
-		tgBotAPI.NewInlineKeyboardRow(
-			tgBotAPI.NewInlineKeyboardButtonData(
-				"Показать список тем",
-				fmt.Sprintf("/%s", command.ListTopics),
-			),
+func getStartKeyboard() tgBotAPI.ReplyKeyboardMarkup {
+	return tgBotAPI.NewReplyKeyboard(
+		tgBotAPI.NewKeyboardButtonRow(
+			tgBotAPI.NewKeyboardButton(fmt.Sprintf("/%s", command.CreateMeeting)),
+			tgBotAPI.NewKeyboardButton(fmt.Sprintf("/%s", command.GetStudents)),
+		),
+		tgBotAPI.NewKeyboardButtonRow(
+			tgBotAPI.NewKeyboardButton(fmt.Sprintf("/%s", command.GetSocialConnections)),
+			tgBotAPI.NewKeyboardButton(fmt.Sprintf("/%s", command.Help)),
 		),
 	)
 }
+
+//func getStartKeyboard() tgBotAPI.InlineKeyboardMarkup {
+//	return tgBotAPI.NewInlineKeyboardMarkup(
+//		tgBotAPI.NewInlineKeyboardRow(
+//			tgBotAPI.NewInlineKeyboardButtonData(
+//				"Показать список тем",
+//				fmt.Sprintf("/%s", command.ListTopics),
+//			),
+//		),
+//	)
+//}

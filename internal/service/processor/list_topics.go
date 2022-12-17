@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -53,19 +54,48 @@ func (s *Service) ListTopics(ctx context.Context, msg *model.TelegramMessage) (t
 	res.WriteString(t)
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, res.String())
-	reply.ReplyMarkup = getTopicsKeyboard(topics)
+
+	var users []*model.Student
+	users, err = s.studentRepository.GetStudentByTelegramChatIDs(ctx, []int64{msg.From.ID})
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
+	}
+	if len(users) == 0 {
+		return tgBotAPI.NewMessage(msg.From.ID, "Кажется ты не зарегистрирован:( Для этого нажми /"+command.Start), nil
+	}
+
+	listenerID := users[0].ID
+	var speakerID int64
+	flag := false
+	if len(msg.Arguments) > 0 {
+		flag, err = strconv.ParseBool(msg.Arguments[0])
+		if err != nil {
+			return tgBotAPI.MessageConfig{}, err
+		}
+	}
+
+	if !flag {
+		if len(msg.Arguments) == 2 {
+			speakerID, err = strconv.ParseInt(msg.Arguments[1], 10, 64)
+			if err != nil {
+				return tgBotAPI.MessageConfig{}, err
+			}
+		}
+	}
+
+	reply.ReplyMarkup = getCreateMeetingKeyboard(topics, speakerID, listenerID)
 
 	return reply, nil
 }
 
-func getTopicsKeyboard(topics []*model.Topic) tgBotAPI.InlineKeyboardMarkup {
+func getCreateMeetingKeyboard(topics []*model.Topic, speakerID int64, listenerID int64) tgBotAPI.InlineKeyboardMarkup {
 	var buttonsInfo []*model.TelegramButtonInfo
 	for _, topic := range topics {
 		buttonsInfo = append(buttonsInfo, &model.TelegramButtonInfo{
 			Text: fmt.Sprintf("%d", topic.ID),
-			Data: fmt.Sprintf("/%s %d", command.FindSpeaker, topic.ID),
+			Data: fmt.Sprintf("/%s %d %d %d", command.CreateMeeting, topic.ID, speakerID, listenerID),
 		})
 	}
 
-	return helper.BuildKeyboard(buttonsInfo)
+	return helper.BuildKeyboard(buttonsInfo, 3)
 }
