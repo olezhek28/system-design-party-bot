@@ -81,8 +81,6 @@ func (s *Service) executeCommand(ctx context.Context, msg *model.TelegramMessage
 		return tgBotAPI.MessageConfig{}, errors.Wrap(err, "failed to execute command")
 	}
 
-	reply.Text = reply.Text + model.Line
-
 	return reply, nil
 }
 

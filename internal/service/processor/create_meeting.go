@@ -91,10 +91,12 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		FirstName string
 		LastName  string
 		StartDate string
+		Emoji     string
 	}{
 		FirstName: speakersInfo[0].FirstName,
 		LastName:  speakersInfo[0].LastName,
 		StartDate: startDateLocal.Format(timeFormat),
+		Emoji:     model.GetEmoji(model.FoodEmojis),
 	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err

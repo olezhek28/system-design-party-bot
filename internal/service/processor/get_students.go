@@ -20,7 +20,11 @@ func (s *Service) GetStudents(ctx context.Context, msg *model.TelegramMessage) (
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	t, err := helper.ExecuteTemplate(template.StudentDescription, nil)
+	t, err := helper.ExecuteTemplate(template.StudentDescription, struct {
+		Emoji string
+	}{
+		Emoji: model.GetEmoji(model.PlantsEmojis),
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -51,7 +55,7 @@ func getStudentsKeyboard(students []*model.Student) tgBotAPI.InlineKeyboardMarku
 
 func getStudentText(student *model.Student) (string, error) {
 	rand.Seed(time.Now().UnixNano())
-	emoji := []rune(model.Emojis)[rand.Intn(utf8.RuneCountInString(model.Emojis))]
+	emoji := []rune(model.VegetablesEmojis)[rand.Intn(utf8.RuneCountInString(model.VegetablesEmojis))]
 
 	t, err := helper.ExecuteTemplate(template.StudentInfo, struct {
 		Emoji     string

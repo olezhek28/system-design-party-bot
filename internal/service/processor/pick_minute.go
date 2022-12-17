@@ -24,8 +24,10 @@ func (s *Service) PickMin(ctx context.Context, msg *model.TelegramMessage) (tgBo
 
 	t, err := helper.ExecuteTemplate(template.MeetingConfirmation, struct {
 		StartDate string
+		Emoji     string
 	}{
 		StartDate: startDate.Format(timeFormat),
+		Emoji:     model.GetEmoji(model.DrinksEmojis),
 	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err

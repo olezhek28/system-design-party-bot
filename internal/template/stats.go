@@ -4,7 +4,6 @@ const SpeakerStats = `🎯 Тема "{{ .TopicName }}" была пересказ
 `
 
 const SpeakerStatsIntroduction = `А вот и статистика спикера <b>{{ .FirstName }} {{ .LastName }}</b> по разным темам.
-🍺🏀🎖🥁🎸
 `
 
 const TopicStatsHeader = `📮 Тему "{{ .TopicName }}" пересказывали:
@@ -14,5 +13,4 @@ const TopicStats = `						🧩 {{ .FirstName }} {{ .LastName }} (@{{ .TelegramUs
 `
 
 const TopicStatsIntroduction = `Статистика спикеров по разным темам.
-🍺🏀🎖🥁🎸
 `

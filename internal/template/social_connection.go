@@ -1,9 +1,9 @@
 package template
 
-const SocialConnectionDescription = `🍟 Вот такие социальные связи у нас уже сформировались:
+const SocialConnectionDescription = `{{ .Emoji }} Вот такие социальные связи у нас уже сформировались:
 `
 
-const SocialConnectionStudentName = `🦊 {{ .StudentFirstName }} {{ .StudentLastName }} (@{{ .StudentTelegramUsername }}) уже знаком(а) с:
+const SocialConnectionStudentName = `{{ .Emoji }} {{ .StudentFirstName }} {{ .StudentLastName }} (@{{ .StudentTelegramUsername }}) уже знаком(а) с:
 `
 
 const SocialConnection = `					🟢 {{ .PartnerFirstName }} {{ .PartnerLastName }} (@{{ .PartnerTelegramUsername }})

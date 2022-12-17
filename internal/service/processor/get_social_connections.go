@@ -37,7 +37,11 @@ func (s *Service) GetSocialConnections(ctx context.Context, msg *model.TelegramM
 	}
 
 	res := strings.Builder{}
-	t, err := helper.ExecuteTemplate(template.SocialConnectionDescription, nil)
+	t, err := helper.ExecuteTemplate(template.SocialConnectionDescription, struct {
+		Emoji string
+	}{
+		Emoji: model.GetEmoji(model.FoodEmojis),
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -54,10 +58,12 @@ func (s *Service) GetSocialConnections(ctx context.Context, msg *model.TelegramM
 			StudentFirstName        string
 			StudentLastName         string
 			StudentTelegramUsername string
+			Emoji                   string
 		}{
 			StudentFirstName:        studentInfo.FirstName,
 			StudentLastName:         studentInfo.LastName,
 			StudentTelegramUsername: studentInfo.TelegramUsername,
+			Emoji:                   model.GetEmoji(model.AnimalsEmojis),
 		})
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err

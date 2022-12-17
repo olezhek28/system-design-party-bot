@@ -50,7 +50,11 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 	}
 
 	res := strings.Builder{}
-	t, err := helper.ExecuteTemplate(template.CalendarDescription, nil)
+	t, err := helper.ExecuteTemplate(template.CalendarDescription, struct {
+		Emoji string
+	}{
+		Emoji: model.GetEmoji(model.CalendarEmojis),
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -85,6 +89,7 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 			ListenerTelegramUsername string
 			TopicName                string
 			StartDate                string
+			Emoji                    string
 		}{
 			SpeakerFirstName:         speaker.FirstName,
 			SpeakerLastName:          speaker.LastName,
@@ -94,6 +99,7 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 			ListenerTelegramUsername: listener.TelegramUsername,
 			TopicName:                topic.Name,
 			StartDate:                m.StartDate.Add(timezone).Format(timeFormat),
+			Emoji:                    model.GetEmoji(model.DrinksEmojis),
 		})
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
