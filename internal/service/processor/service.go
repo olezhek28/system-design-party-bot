@@ -118,23 +118,26 @@ func (s *Service) executeCallback(ctx context.Context, event tgBotAPI.Update) (t
 // TODO добавить для каждой команды свой обработчик аргументов в одном месте, а не в каждом обработчике
 func (s *Service) getCommandMap() map[string]Handler {
 	return map[string]Handler{
-		command.Start:             s.Start,
-		command.FindSpeaker:       s.FindSpeaker,
-		command.ListTopics:        s.ListTopics,
-		command.GetStatsBySpeaker: s.GetStatsBySpeaker,
-		command.GetTopicStats:     s.GetTopicStats,
-		command.CreateMeeting:     s.CreateMeeting,
-		command.FinishMeeting:     s.FinishMeeting,
-		command.CancelMeeting:     s.CancelMeeting,
-		command.GetStudents:       s.GetStudents,
-		command.GetCalendar:       s.GetCalendar,
-		command.SetTimezone:       s.SetTimezone,
-		command.GetTimezone:       s.GetTimezone,
-		command.PickYear:          s.PickYear,
-		command.PickMonth:         s.PickMonth,
-		command.PickDay:           s.PickDay,
-		command.PickHour:          s.PickHour,
-		command.PickMin:           s.PickMin,
+		command.Start:                s.Start,
+		command.FindSpeaker:          s.FindSpeaker,
+		command.ListTopics:           s.ListTopics,
+		command.GetStatsBySpeaker:    s.GetStatsBySpeaker,
+		command.GetTopicStats:        s.GetTopicStats,
+		command.CreateMeeting:        s.CreateMeeting,
+		command.FinishMeeting:        s.FinishMeeting,
+		command.CancelMeeting:        s.CancelMeeting,
+		command.GetStudents:          s.GetStudents,
+		command.GetCalendar:          s.GetCalendar,
+		command.SetTimezone:          s.SetTimezone,
+		command.GetTimezone:          s.GetTimezone,
+		command.GetSocialConnections: s.GetSocialConnections,
+
+		command.PickYear:  s.PickYear,
+		command.PickMonth: s.PickMonth,
+		command.PickDay:   s.PickDay,
+		command.PickHour:  s.PickHour,
+		command.PickMin:   s.PickMin,
+
 		// TODO добавить обработчик для команды /help
 		// TODO кто и кому пересказывал и когда
 		// TODO календарь назначения встречь
