@@ -1,9 +1,9 @@
 package template
 
-const SpeakerStats = `🎯 Тема "{{ .TopicName }}" была пересказана — {{ .Count }} раз(а).
+const SpeakerStats = `					🎯 Тема "{{ .TopicName }}" была пересказана — <b>{{ .Count }} раз(а)</b>.
 `
 
-const SpeakerStatsIntroduction = `А вот и статистика спикера <b>{{ .FirstName }} {{ .LastName }}</b> по разным темам.
+const SpeakerStatsIntroduction = `🤹‍♂️ А вот и статистика спикера <b>{{ .FirstName }} {{ .LastName }}</b> по разным темам.
 `
 
 const TopicStatsHeader = `📮 Тему "{{ .TopicName }}" пересказывали:

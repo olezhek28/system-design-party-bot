@@ -22,7 +22,7 @@ func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMess
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	meets, err := s.meetingRepository.GetSuccessMeetingBySpeaker(ctx, speakerID)
+	meets, err := s.meetingRepository.GetFinishedMeetingBySpeaker(ctx, speakerID)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

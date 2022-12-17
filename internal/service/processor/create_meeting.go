@@ -44,6 +44,19 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 			return tgBotAPI.MessageConfig{}, err
 		}
 
+		var listenerID int64
+		listenerID, err = strconv.ParseInt(msg.Arguments[2], 10, 64)
+		if err != nil {
+			return tgBotAPI.MessageConfig{}, err
+		}
+
+		if speakerID == 0 {
+			speakerID, err = s.getBestSpeaker(ctx, topicID, listenerID)
+			if err != nil {
+				return tgBotAPI.MessageConfig{}, err
+			}
+		}
+
 		var speakersInfo []*model.Student
 		speakersInfo, err = s.studentRepository.GetStudentByIDs(ctx, []int64{speakerID})
 		if err != nil {

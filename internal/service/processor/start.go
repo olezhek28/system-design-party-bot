@@ -57,14 +57,3 @@ func getStartKeyboard() tgBotAPI.ReplyKeyboardMarkup {
 		),
 	)
 }
-
-//func getStartKeyboard() tgBotAPI.InlineKeyboardMarkup {
-//	return tgBotAPI.NewInlineKeyboardMarkup(
-//		tgBotAPI.NewInlineKeyboardRow(
-//			tgBotAPI.NewInlineKeyboardButtonData(
-//				"Показать список тем",
-//				fmt.Sprintf("/%s", command.ListTopics),
-//			),
-//		),
-//	)
-//}

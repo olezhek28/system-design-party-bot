@@ -16,7 +16,7 @@ const tableName = "meeting"
 // Repository ...
 type Repository interface {
 	GetSpeakersStats(ctx context.Context, topicID int64, excludeSpeakerID int64) ([]*model.Stats, error)
-	GetSuccessMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error)
+	GetFinishedMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error)
 	GetMeetingsByStatus(ctx context.Context, status string) ([]*model.Meeting, error)
 	CreateMeeting(ctx context.Context, meeting *model.Meeting) (int64, error)
 	UpdateMeetingsStatus(ctx context.Context, status string, meetingIDs []int64) error
@@ -66,7 +66,7 @@ func (r *repository) GetSpeakersStats(ctx context.Context, topicID int64, exclud
 	return res, nil
 }
 
-func (r *repository) GetSuccessMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error) {
+func (r *repository) GetFinishedMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error) {
 	builder := sq.Select("id, topic_id, status, start_date, speaker_id, listener_id, created_at").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
@@ -79,7 +79,7 @@ func (r *repository) GetSuccessMeetingBySpeaker(ctx context.Context, speakerID i
 	}
 
 	q := db.Query{
-		Name:     "meeting_repository.GetSuccessMeetingBySpeaker",
+		Name:     "meeting_repository.GetFinishedMeetingBySpeaker",
 		QueryRaw: query,
 	}
 

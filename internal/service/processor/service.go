@@ -135,6 +135,8 @@ func (s *Service) getCommandMap() map[string]Handler {
 		command.PickHour:  s.PickHour,
 		command.PickMin:   s.PickMin,
 
+		command.Help: s.Help,
+
 		// TODO добавить обработчик для команды /help
 		// TODO кто и кому пересказывал и когда
 		// TODO календарь назначения встречь

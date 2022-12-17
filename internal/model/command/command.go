@@ -12,8 +12,8 @@ const (
 	GetCalendar             = "get_calendar"
 	SetTimezone             = "set_timezone"
 	GetTimezone             = "get_timezone"
-	GetSocialConnections    = "get_social_connections"
-	GetAllSocialConnections = "get_all_social_connections"
+	GetSocialConnections    = "get_social_conns"
+	GetAllSocialConnections = "get_all_social_conns"
 
 	PickMonth = "pick_month"
 	PickDay   = "pick_day"
