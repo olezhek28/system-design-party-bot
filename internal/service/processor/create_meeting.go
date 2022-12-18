@@ -212,7 +212,12 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, errors.New("speaker not found")
 	}
 
-	notificationMsg, err := helper.GetNotification(listeners[0], topic[0].Name, startDateLocal, speakersInfo[0].TelegramID, template.NotificationAfterCreate)
+	startDateListener := startDateUTC
+	if speakersInfo[0].Timezone.Valid {
+		startDateListener = startDateListener.Add(time.Duration(speakersInfo[0].Timezone.Int64) * time.Hour)
+	}
+
+	notificationMsg, err := helper.GetNotification(listeners[0], topic[0].Name, startDateListener, speakersInfo[0].TelegramID, template.NotificationAfterCreate)
 	if err != nil {
 		fmt.Printf("error while getting notification message: %v\n", err)
 	}
