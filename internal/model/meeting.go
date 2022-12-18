@@ -2,6 +2,8 @@ package model
 
 import "time"
 
+const ReminderTime = 10 * time.Minute
+
 const (
 	// MeetingStatusNew - new meeting
 	MeetingStatusNew = "new"

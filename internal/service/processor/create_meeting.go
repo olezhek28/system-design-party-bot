@@ -204,11 +204,50 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, err
 	}
 
+	listeners, err := s.studentRepository.GetStudentByIDs(ctx, []int64{listenerID})
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
+	}
+	if len(listeners) == 0 {
+		return tgBotAPI.MessageConfig{}, errors.New("speaker not found")
+	}
+
+	err = s.sendNotification(listeners[0], topic[0].Name, startDateLocal, speakersInfo[0].TelegramID)
+	if err != nil {
+		fmt.Printf("error while sending notification: %v", err)
+	}
+
 	reply := tgBotAPI.NewMessage(msg.From.ID, t)
 	reply.ReplyMarkup = getMeetingKeyboard(meetingID1, meetingID2)
 	reply.ParseMode = tgBotAPI.ModeHTML
 
 	return reply, nil
+}
+
+func (s *Service) getBestSpeaker(ctx context.Context, topicID int64, listenerID int64) (int64, error) {
+	stats, err := s.meetingRepository.GetSpeakersStats(ctx, topicID, listenerID)
+	if err != nil {
+		return 0, err
+	}
+
+	speakerID := helper.GetInexperiencedSpeaker(stats)
+	if speakerID == 0 {
+		var speakerInfo *model.Student
+		speakerInfo, err = s.studentRepository.GetRandomStudent(ctx, listenerID)
+		if err != nil {
+			return 0, err
+		}
+		if speakerInfo == nil {
+			return 0, errors.New("no speakers")
+		}
+		if speakerInfo.ID == listenerID {
+			return 0, errors.New("🚫 Что-то кроме тебя я никого пока не знаю:( Зови друзей сюда и начнём движение.")
+		}
+
+		speakerID = speakerInfo.ID
+	}
+
+	return speakerID, nil
 }
 
 func getChoiceModeKeyboard() tgBotAPI.InlineKeyboardMarkup {
@@ -298,30 +337,4 @@ func getStartDate(args []string) (time.Time, error) {
 	timestamp := time.Date(int(year), time.Month(month), int(day), int(hour), int(min), 0, 0, time.UTC)
 
 	return timestamp, nil
-}
-
-func (s *Service) getBestSpeaker(ctx context.Context, topicID int64, listenerID int64) (int64, error) {
-	stats, err := s.meetingRepository.GetSpeakersStats(ctx, topicID, listenerID)
-	if err != nil {
-		return 0, err
-	}
-
-	speakerID := helper.GetInexperiencedSpeaker(stats)
-	if speakerID == 0 {
-		var speakerInfo *model.Student
-		speakerInfo, err = s.studentRepository.GetRandomStudent(ctx, listenerID)
-		if err != nil {
-			return 0, err
-		}
-		if speakerInfo == nil {
-			return 0, errors.New("no speakers")
-		}
-		if speakerInfo.ID == listenerID {
-			return 0, errors.New("🚫 Что-то кроме тебя я никого пока не знаю:( Зови друзей сюда и начнём движение.")
-		}
-
-		speakerID = speakerInfo.ID
-	}
-
-	return speakerID, nil
 }
