@@ -13,9 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const timeFormat = "02-Jan-2006 15:04"
-
-func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
+func (s *Service) GetAllCalendar(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
 	user, err := s.studentRepository.GetStudentByTelegramChatIDs(ctx, []int64{msg.From.ID})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
@@ -29,12 +27,19 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 		timezone = time.Duration(user[0].Timezone.Int64) * time.Hour
 	}
 
-	meets, err := s.meetingRepository.GetNewMeetingBySpeaker(ctx, user[0].ID)
+	meets, err := s.meetingRepository.GetMeetingsByStatus(ctx, model.MeetingStatusNew)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
 
+	meets = excludeDuplicateMeetings(meets)
+
 	topicMap, err := s.getTopicMap(ctx, meets)
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
+	}
+
+	speakerMap, err := s.getSpeakerMap(ctx, meets)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -45,7 +50,7 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 	}
 
 	res := strings.Builder{}
-	t, err := helper.ExecuteTemplate(template.CalendarDescription, struct {
+	t, err := helper.ExecuteTemplate(template.CalendarAllDescription, struct {
 		Emoji string
 	}{
 		Emoji: model.GetEmoji(model.CalendarEmojis),
@@ -63,13 +68,19 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 			continue
 		}
 
+		speaker, ok := speakerMap[m.SpeakerID]
+		if !ok {
+			errors.Errorf("speaker with id %d not found\n", m.SpeakerID)
+			continue
+		}
+
 		listener, ok := listenerMap[m.ListenerID]
 		if !ok {
 			errors.Errorf("listener with id %d not found\n", m.ListenerID)
 			continue
 		}
 
-		t, err = helper.ExecuteTemplate(template.CalendarMeeting, struct {
+		t, err = helper.ExecuteTemplate(template.CalendarAllMeeting, struct {
 			SpeakerFirstName         string
 			SpeakerLastName          string
 			SpeakerTelegramUsername  string
@@ -80,9 +91,9 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 			StartDate                string
 			Emoji                    string
 		}{
-			SpeakerFirstName:         user[0].FirstName,
-			SpeakerLastName:          user[0].LastName,
-			SpeakerTelegramUsername:  user[0].TelegramUsername,
+			SpeakerFirstName:         speaker.FirstName,
+			SpeakerLastName:          speaker.LastName,
+			SpeakerTelegramUsername:  speaker.TelegramUsername,
 			ListenerFirstName:        listener.FirstName,
 			ListenerLastName:         listener.LastName,
 			ListenerTelegramUsername: listener.TelegramUsername,
@@ -99,4 +110,27 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, res.String())
 	return reply, nil
+}
+
+// TODO refactor, del n*n complexity
+func excludeDuplicateMeetings(meetings []*model.Meeting) []*model.Meeting {
+	res := make([]*model.Meeting, 0, len(meetings))
+	for i := 0; i < len(meetings); i++ {
+		isDuplicate := false
+		for j := i + 1; j < len(meetings); j++ {
+			if meetings[i].SpeakerID == meetings[j].ListenerID &&
+				meetings[i].ListenerID == meetings[j].SpeakerID &&
+				meetings[i].TopicID == meetings[j].TopicID &&
+				meetings[i].StartDate == meetings[j].StartDate {
+				isDuplicate = true
+				break
+			}
+		}
+
+		if !isDuplicate {
+			res = append(res, meetings[i])
+		}
+	}
+
+	return res
 }

@@ -10,6 +10,7 @@ const (
 	FinishMeeting           = "finish_meeting"
 	GetStudents             = "get_students"
 	GetCalendar             = "get_calendar"
+	GetAllCalendar          = "get_all_calendar"
 	SetTimezone             = "set_timezone"
 	GetTimezone             = "get_timezone"
 	GetSocialConnections    = "get_social_conns"

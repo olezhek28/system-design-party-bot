@@ -33,7 +33,8 @@ func NewRepository(db db.Client) *repository {
 func (r *repository) GetTopicsByIDs(ctx context.Context, ids []int64) ([]*model.Topic, error) {
 	builder := sq.Select("id, name, description, link, created_at, updated_at").
 		PlaceholderFormat(sq.Dollar).
-		From(tableName)
+		From(tableName).
+		OrderBy("id ASC")
 
 	if len(ids) > 0 {
 		builder = builder.Where(sq.Eq{"id": ids})

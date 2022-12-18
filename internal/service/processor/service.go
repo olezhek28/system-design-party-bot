@@ -125,6 +125,7 @@ func (s *Service) getCommandMap() map[string]Handler {
 		command.CancelMeeting:           s.CancelMeeting,
 		command.GetStudents:             s.GetStudents,
 		command.GetCalendar:             s.GetCalendar,
+		command.GetAllCalendar:          s.GetAllCalendar,
 		command.SetTimezone:             s.SetTimezone,
 		command.GetTimezone:             s.GetTimezone,
 		command.GetSocialConnections:    s.GetSocialConnections,

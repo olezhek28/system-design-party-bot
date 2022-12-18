@@ -16,6 +16,7 @@ const tableName = "meeting"
 // Repository ...
 type Repository interface {
 	GetSpeakersStats(ctx context.Context, topicID int64, excludeSpeakerID int64) ([]*model.Stats, error)
+	GetNewMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error)
 	GetFinishedMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error)
 	GetMeetingsByStatus(ctx context.Context, status string) ([]*model.Meeting, error)
 	CreateMeeting(ctx context.Context, meeting *model.Meeting) (int64, error)
@@ -58,6 +59,32 @@ func (r *repository) GetSpeakersStats(ctx context.Context, topicID int64, exclud
 	}
 
 	var res []*model.Stats
+	err = r.db.DB().SelectContext(ctx, &res, q, v...)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *repository) GetNewMeetingBySpeaker(ctx context.Context, speakerID int64) ([]*model.Meeting, error) {
+	builder := sq.Select("id, topic_id, status, start_date, speaker_id, listener_id, created_at").
+		PlaceholderFormat(sq.Dollar).
+		From(tableName).
+		Where(sq.Eq{"speaker_id": speakerID}).
+		Where(sq.Eq{"status": model.MeetingStatusNew})
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "meeting_repository.GetNewMeetingBySpeaker",
+		QueryRaw: query,
+	}
+
+	var res []*model.Meeting
 	err = r.db.DB().SelectContext(ctx, &res, q, v...)
 	if err != nil {
 		return nil, err
