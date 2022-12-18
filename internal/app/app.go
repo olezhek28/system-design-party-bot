@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"log"
 	"sync"
 )
 
@@ -17,12 +18,24 @@ func New() *App {
 
 func (a *App) Run(ctx context.Context) error {
 	processorService := a.serviceProvider.GetProcessorService(ctx)
+	schedulerService := a.serviceProvider.GetSchedulerService(ctx)
 
 	wg := sync.WaitGroup{}
-	wg.Add(1)
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		processorService.Run(ctx)
+		err := processorService.Run(ctx)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		err := schedulerService.Run(ctx)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}()
 
 	wg.Wait()

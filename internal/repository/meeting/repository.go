@@ -5,6 +5,7 @@ package meeting_repository
 
 import (
 	"context"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
@@ -22,6 +23,7 @@ type Repository interface {
 	CreateMeeting(ctx context.Context, meeting *model.Meeting) (int64, error)
 	UpdateMeetingsStatus(ctx context.Context, status string, meetingIDs []int64) error
 	GetSpeakerCountByTopic(ctx context.Context, topicID int64, speakerID int64) (int64, error)
+	GetMeetingsByRange(ctx context.Context, startDate time.Time) ([]*model.Meeting, error)
 }
 
 type repository struct {
@@ -219,4 +221,29 @@ func (r *repository) GetSpeakerCountByTopic(ctx context.Context, topicID int64, 
 	}
 
 	return count, nil
+}
+
+func (r *repository) GetMeetingsByRange(ctx context.Context, startDate time.Time) ([]*model.Meeting, error) {
+	builder := sq.Select("id, topic_id, status, start_date, speaker_id, listener_id, created_at").
+		PlaceholderFormat(sq.Dollar).
+		From(tableName).
+		Where(sq.Eq{"start_date": startDate})
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "meeting_repository.GetMeetingsByRange",
+		QueryRaw: query,
+	}
+
+	var res []*model.Meeting
+	err = r.db.DB().SelectContext(ctx, &res, q, v...)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

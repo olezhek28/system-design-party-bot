@@ -32,7 +32,7 @@ func (s *Service) GetAllCalendar(ctx context.Context, msg *model.TelegramMessage
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	meets = excludeDuplicateMeetings(meets)
+	meets = helper.ExcludeDuplicateMeetings(meets)
 
 	topicMap, err := s.getTopicMap(ctx, meets)
 	if err != nil {
@@ -98,7 +98,7 @@ func (s *Service) GetAllCalendar(ctx context.Context, msg *model.TelegramMessage
 			ListenerLastName:         listener.LastName,
 			ListenerTelegramUsername: listener.TelegramUsername,
 			TopicName:                topic.Name,
-			StartDate:                m.StartDate.Add(timezone).Format(timeFormat),
+			StartDate:                m.StartDate.Add(timezone).Format(model.TimeFormat),
 			Emoji:                    model.GetEmoji(model.DrinksEmojis),
 		})
 		if err != nil {
@@ -110,27 +110,4 @@ func (s *Service) GetAllCalendar(ctx context.Context, msg *model.TelegramMessage
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, res.String())
 	return reply, nil
-}
-
-// TODO refactor, del n*n complexity
-func excludeDuplicateMeetings(meetings []*model.Meeting) []*model.Meeting {
-	res := make([]*model.Meeting, 0, len(meetings))
-	for i := 0; i < len(meetings); i++ {
-		isDuplicate := false
-		for j := i + 1; j < len(meetings); j++ {
-			if meetings[i].SpeakerID == meetings[j].ListenerID &&
-				meetings[i].ListenerID == meetings[j].SpeakerID &&
-				meetings[i].TopicID == meetings[j].TopicID &&
-				meetings[i].StartDate == meetings[j].StartDate {
-				isDuplicate = true
-				break
-			}
-		}
-
-		if !isDuplicate {
-			res = append(res, meetings[i])
-		}
-	}
-
-	return res
 }

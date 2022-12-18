@@ -1,20 +1,18 @@
-package processor
+package helper
 
 import (
 	"time"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
-	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
-func GetNotification(initiator *model.Student, topicName string, startDate time.Time, recipientID int64) (tgBotAPI.MessageConfig, error) {
+func GetNotification(initiator *model.Student, topicName string, startDate time.Time, recipientID int64, tmpl string) (tgBotAPI.MessageConfig, error) {
 	if initiator == nil {
 		return tgBotAPI.MessageConfig{}, nil
 	}
 
-	t, err := helper.ExecuteTemplate(template.NotificationAfterCreate, struct {
+	t, err := ExecuteTemplate(tmpl, struct {
 		FirstName        string
 		LastName         string
 		TelegramUsername string

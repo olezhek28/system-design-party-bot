@@ -2,7 +2,11 @@ package model
 
 import "time"
 
-const ReminderTime = 10 * time.Minute
+const (
+	ReminderTime = "10"
+
+	TimeFormat = "02-Jan-2006 15:04"
+)
 
 const (
 	// MeetingStatusNew - new meeting

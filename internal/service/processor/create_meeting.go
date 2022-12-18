@@ -195,7 +195,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		FirstName:        speakersInfo[0].FirstName,
 		LastName:         speakersInfo[0].LastName,
 		TelegramUsername: speakersInfo[0].TelegramUsername,
-		StartDate:        startDateLocal.Format(timeFormat),
+		StartDate:        startDateLocal.Format(model.TimeFormat),
 		Emoji:            model.GetEmoji(model.FoodEmojis),
 		TopicName:        topic[0].Name,
 		Count:            count,
@@ -212,9 +212,14 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, errors.New("speaker not found")
 	}
 
-	err = s.sendNotification(listeners[0], topic[0].Name, startDateLocal, speakersInfo[0].TelegramID)
+	notificationMsg, err := helper.GetNotification(listeners[0], topic[0].Name, startDateLocal, speakersInfo[0].TelegramID, template.NotificationAfterCreate)
 	if err != nil {
-		fmt.Printf("error while sending notification: %v", err)
+		fmt.Printf("error while getting notification message: %v\n", err)
+	}
+
+	err = s.telegramClient.Send(notificationMsg)
+	if err != nil {
+		fmt.Printf("error while sending notification: %v\n", err)
 	}
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, t)

@@ -26,7 +26,7 @@ func (s *Service) PickMin(ctx context.Context, msg *model.TelegramMessage) (tgBo
 		StartDate string
 		Emoji     string
 	}{
-		StartDate: startDate.Format(timeFormat),
+		StartDate: startDate.Format(model.TimeFormat),
 		Emoji:     model.GetEmoji(model.DrinksEmojis),
 	})
 	if err != nil {

@@ -13,8 +13,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const timeFormat = "02-Jan-2006 15:04"
-
 func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
 	user, err := s.studentRepository.GetStudentByTelegramChatIDs(ctx, []int64{msg.From.ID})
 	if err != nil {
@@ -87,7 +85,7 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 			ListenerLastName:         listener.LastName,
 			ListenerTelegramUsername: listener.TelegramUsername,
 			TopicName:                topic.Name,
-			StartDate:                m.StartDate.Add(timezone).Format(timeFormat),
+			StartDate:                m.StartDate.Add(timezone).Format(model.TimeFormat),
 			Emoji:                    model.GetEmoji(model.DrinksEmojis),
 		})
 		if err != nil {

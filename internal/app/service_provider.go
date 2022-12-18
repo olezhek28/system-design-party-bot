@@ -12,6 +12,7 @@ import (
 	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
 	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
 	"github.com/olezhek28/system-design-party-bot/internal/service/processor"
+	"github.com/olezhek28/system-design-party-bot/internal/service/scheduler"
 )
 
 type serviceProvider struct {
@@ -24,6 +25,7 @@ type serviceProvider struct {
 	studentRepository studentRepository.Repository
 
 	processorService *processor.Service
+	schedulerService *scheduler.Service
 }
 
 func NewServiceProvider() *serviceProvider {
@@ -101,4 +103,17 @@ func (s *serviceProvider) GetProcessorService(ctx context.Context) *processor.Se
 	}
 
 	return s.processorService
+}
+
+func (s *serviceProvider) GetSchedulerService(ctx context.Context) *scheduler.Service {
+	if s.schedulerService == nil {
+		s.schedulerService = scheduler.NewService(
+			s.GetTelegramClient(),
+			s.GetMeetingRepository(ctx),
+			s.GetTopicRepository(ctx),
+			s.GetStudentRepository(ctx),
+		)
+	}
+
+	return s.schedulerService
 }
