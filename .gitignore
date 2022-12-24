@@ -14,3 +14,6 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 .idea
+/internal/config/db.go
+/internal/config/telegram_bot.go
+/dump_2022-12-23_13_20_18.sql
