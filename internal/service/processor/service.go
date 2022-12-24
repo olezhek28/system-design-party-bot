@@ -138,15 +138,24 @@ func (s *Service) getCommandMap() map[string]Handler {
 
 		command.Help: s.Help,
 
-		// TODO добавить обработчик для команды /help
-		// TODO кто и кому пересказывал и когда
-		// TODO календарь назначения встречь
 		// TODO создание гугл митс встречь
 		// TODO присылание ссылки на гугл митс встреч с датой и временем в общий чат
 		// TODO добавить команду /add_topic
 		// TODO добавить крон, который чекает встречи по времени и если осталось чутка до встречи напоминает о ней участникам
 		// TODO добавить в шаблоны хтмл тегов
-		// TODO добавить в шаблоны генерацию эмодзи
 		// TODO Хранить инфу о ДР, чтоб поздравлять
+
+		// !!!! TODO Сделать команду, которая позволяет какое-то сообщение рассылать всем участникам
+
+		// TODO ПЕРВОСТЕПЕННО
+		// 1. Добавить кнопки управления встречей в календарь каждого участника
+		// 2. Доработать механизм выбора участника на рассказ
+		// 3. Добавить выбор категории тем, чтобы не только систем дизайн мог быть
+		// 4. В социальных связях не показывать самого себя
 	}
 }
+
+// docker exec -t system-design-party-bot_db_1 pg_dumpall -c -U system-design-party-bot-user > dump_$(date +%Y-%m-%d_%H_%M_%S).sql
+// docker exec -t system-design-party-bot_db_1 pg_dumpall -c -U system-design-party-bot-user | gzip > ./dump_$(date +"%Y-%m-%d_%H_%M_%S").gz
+// cat dump_2022-12-19_12_50_46.sql | docker exec -i system-design-party-bot_db_1 psql -U system-design-party-bot-user -d system-design-party-bot
+// gunzip < dump_2022-12-19_13_57_00.gz | docker exec -i system-design-party-bot_db_1 psql -U system-design-party-bot-user -d system-design-party-bot

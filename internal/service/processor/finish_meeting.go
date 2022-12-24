@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+	"database/sql"
 	"strconv"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -27,7 +28,9 @@ func (s *Service) FinishMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	err = s.meetingRepository.UpdateMeetingsStatus(ctx, model.MeetingStatusFinished, []int64{meetingID1, meetingID2})
+	err = s.meetingRepository.Update(ctx, []int64{meetingID1, meetingID2}, &model.UpdateMeeting{
+		Status: sql.NullString{String: model.MeetingStatusFinished, Valid: true},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -38,7 +41,7 @@ func (s *Service) FinishMeeting(ctx context.Context, msg *model.TelegramMessage)
 	}
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, t)
-	reply.ReplyMarkup = getStartKeyboard()
+	//reply.ReplyMarkup = getStartKeyboard()
 
 	return reply, nil
 }

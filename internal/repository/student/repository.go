@@ -5,6 +5,7 @@ package student_repository
 
 import (
 	"context"
+	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
@@ -237,14 +238,11 @@ func (r *repository) GetTimezone(ctx context.Context, telegramID int64) (int64, 
 		QueryRaw: query,
 	}
 
-	var res []int64
-	err = r.db.DB().SelectContext(ctx, &res, q, v...)
+	var res sql.NullInt64
+	err = r.db.DB().QueryRowContext(ctx, q, v...).Scan(&res)
 	if err != nil {
 		return 0, err
 	}
-	if len(res) == 0 {
-		return -1, nil
-	}
 
-	return res[0], nil
+	return res.Int64, nil
 }

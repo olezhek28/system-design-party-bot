@@ -2,12 +2,14 @@ package processor
 
 import (
 	"context"
+	"database/sql"
 	"strconv"
 	"strings"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
+	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 	"github.com/pkg/errors"
 )
@@ -22,7 +24,13 @@ func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMess
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	meets, err := s.meetingRepository.GetFinishedMeetingBySpeaker(ctx, speakerID)
+	meets, err := s.meetingRepository.GetList(ctx, &meetingRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		Status:     sql.NullString{String: model.MeetingStatusFinished, Valid: true},
+		SpeakerIDs: []int64{speakerID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

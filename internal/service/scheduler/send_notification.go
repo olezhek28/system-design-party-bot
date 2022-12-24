@@ -2,12 +2,14 @@ package scheduler
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
+	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
@@ -19,16 +21,22 @@ func (s *Service) sendNotification(ctx context.Context) error {
 		return err
 	}
 
-	begin := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location()).Add(time.Duration(period) * time.Minute)
+	startDate := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location()).Add(time.Duration(period) * time.Minute)
 
-	meets, err := s.meetingRepository.GetMeetingsByRange(ctx, begin)
+	meets, err := s.meetingRepository.GetList(ctx, &meetingRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		Status:    sql.NullString{String: model.MeetingStatusNew, Valid: true},
+		StartDate: sql.NullTime{Time: startDate, Valid: true},
+	})
 	if err != nil {
 		return err
 	}
 
 	meets = helper.ExcludeDuplicateMeetings(meets)
 
-	fmt.Printf("i found %d meetings by %v\n", len(meets), begin)
+	fmt.Printf("i found %d meetings by %v\n", len(meets), startDate)
 
 	for _, meet := range meets {
 		speaker, errMeet := s.studentRepository.GetStudentByIDs(ctx, []int64{meet.SpeakerID})

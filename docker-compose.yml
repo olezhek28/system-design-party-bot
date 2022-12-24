@@ -11,6 +11,6 @@ services:
       - "POSTGRES_USER=system-design-party-bot-user"
       - "POSTGRES_PASSWORD=system-design-party-bot-password"
     ports:
-      - "54321:5432"
+      - "22222:5432"
     volumes:
       - postgres_volume:/var/lib/postgresql/data

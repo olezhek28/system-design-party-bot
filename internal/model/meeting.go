@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 const (
 	ReminderTime = "10"
@@ -25,4 +28,12 @@ type Meeting struct {
 	SpeakerID  int64     `db:"speaker_id"`
 	ListenerID int64     `db:"listener_id"`
 	CreatedAt  time.Time `db:"created_at"`
+}
+
+type UpdateMeeting struct {
+	TopicID    sql.NullInt64
+	Status     sql.NullString
+	StartDate  sql.NullTime
+	SpeakerID  sql.NullInt64
+	ListenerID sql.NullInt64
 }

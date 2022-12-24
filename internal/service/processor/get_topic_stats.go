@@ -2,17 +2,24 @@ package processor
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
+	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 	"github.com/pkg/errors"
 )
 
 func (s *Service) GetTopicStats(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	meets, err := s.meetingRepository.GetMeetingsByStatus(ctx, model.MeetingStatusFinished)
+	meets, err := s.meetingRepository.GetList(ctx, &meetingRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		Status: sql.NullString{String: model.MeetingStatusFinished, Valid: true},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

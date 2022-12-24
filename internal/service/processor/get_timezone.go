@@ -18,11 +18,15 @@ func (s *Service) GetTimezone(ctx context.Context, msg *model.TelegramMessage) (
 		return tgBotAPI.NewMessage(msg.From.ID, "Кажется ты не зарегистрирован:( Для этого нажми /"+command.Start), nil
 	}
 
-	var mark string
+	var timezoneStr string
 	if timezone > 0 {
-		mark = "+"
+		timezoneStr = fmt.Sprintf("+%d", timezone)
 	}
-	reply := fmt.Sprintf("Твоя временная зона: UTC%s%d\n", mark, timezone)
+	if timezone < 0 {
+		timezoneStr = fmt.Sprintf("%d", timezone)
+	}
+
+	reply := fmt.Sprintf("Твоя временная зона: UTC%s\n", timezoneStr)
 
 	return tgBotAPI.NewMessage(msg.From.ID, reply), nil
 }

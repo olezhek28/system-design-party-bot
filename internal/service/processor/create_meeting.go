@@ -140,7 +140,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		}
 	}
 
-	meetingID1, err := s.meetingRepository.CreateMeeting(ctx, &model.Meeting{
+	meetingID1, err := s.meetingRepository.Create(ctx, &model.Meeting{
 		TopicID:    topicID,
 		Status:     model.MeetingStatusNew,
 		StartDate:  startDateUTC,
@@ -151,7 +151,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	meetingID2, err := s.meetingRepository.CreateMeeting(ctx, &model.Meeting{
+	meetingID2, err := s.meetingRepository.Create(ctx, &model.Meeting{
 		TopicID:    topicID,
 		Status:     model.MeetingStatusNew,
 		StartDate:  startDateUTC,
@@ -236,6 +236,13 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 
 func (s *Service) getBestSpeaker(ctx context.Context, topicID int64, listenerID int64) (int64, error) {
 	stats, err := s.meetingRepository.GetSpeakersStats(ctx, topicID, listenerID)
+	//	GetList(ctx, &meetingRepository.Query{
+	//	QueryFilter: model.QueryFilter{
+	//		AllData: true,
+	//	},
+	//	TopicIDs:          []int64{topicID},
+	//	ExcludeSpeakerIDs: []int64{listenerID},
+	//})
 	if err != nil {
 		return 0, err
 	}

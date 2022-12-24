@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/model/command"
+	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 	"github.com/pkg/errors"
 )
@@ -27,7 +29,13 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 		timezone = time.Duration(user[0].Timezone.Int64) * time.Hour
 	}
 
-	meets, err := s.meetingRepository.GetNewMeetingBySpeaker(ctx, user[0].ID)
+	meets, err := s.meetingRepository.GetList(ctx, &meetingRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		Status:     sql.NullString{String: model.MeetingStatusNew, Valid: true},
+		SpeakerIDs: []int64{user[0].ID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

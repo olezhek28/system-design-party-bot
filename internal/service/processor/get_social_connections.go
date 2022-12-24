@@ -2,12 +2,14 @@ package processor
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/model/command"
+	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
@@ -20,7 +22,13 @@ func (s *Service) GetSocialConnections(ctx context.Context, msg *model.TelegramM
 		return tgBotAPI.NewMessage(msg.From.ID, "Кажется ты не зарегистрирован:( Для этого нажми /"+command.Start), nil
 	}
 
-	meets, err := s.meetingRepository.GetFinishedMeetingBySpeaker(ctx, user[0].ID)
+	meets, err := s.meetingRepository.GetList(ctx, &meetingRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		Status:     sql.NullString{String: model.MeetingStatusFinished, Valid: true},
+		SpeakerIDs: []int64{user[0].ID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
