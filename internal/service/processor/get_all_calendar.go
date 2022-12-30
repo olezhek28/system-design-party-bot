@@ -26,7 +26,10 @@ func (s *Service) GetAllCalendar(ctx context.Context, msg *model.TelegramMessage
 
 	var timezone time.Duration
 	if user[0].Timezone.Valid {
-		timezone = time.Duration(user[0].Timezone.Int64) * time.Hour
+		hours := user[0].Timezone.Int64 / 60
+		minutes := user[0].Timezone.Int64 % 60
+
+		timezone = time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute
 	}
 
 	meets, err := s.meetingRepository.GetList(ctx, &meetingRepository.Query{

@@ -115,7 +115,10 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 
 	startDateUTC := startDateLocal
 	if user[0].Timezone.Valid {
-		startDateUTC = startDateUTC.Add((-1) * time.Duration(user[0].Timezone.Int64) * time.Hour)
+		hours := int(user[0].Timezone.Int64 / 60)
+		minutes := int(user[0].Timezone.Int64 % 60)
+
+		startDateUTC = startDateLocal.Add((-1)*time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute)
 	}
 
 	topicID, err := strconv.ParseInt(msg.Arguments[5], 10, 64)
@@ -214,7 +217,10 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 
 	startDateListener := startDateUTC
 	if speakersInfo[0].Timezone.Valid {
-		startDateListener = startDateListener.Add(time.Duration(speakersInfo[0].Timezone.Int64) * time.Hour)
+		hours := int(speakersInfo[0].Timezone.Int64 / 60)
+		minutes := int(speakersInfo[0].Timezone.Int64 % 60)
+
+		startDateListener = startDateUTC.Add(time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute)
 	}
 
 	notificationMsg, err := helper.GetNotification(listeners[0], topic[0].Name, startDateListener, speakersInfo[0].TelegramID, template.NotificationAfterCreate)

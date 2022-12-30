@@ -16,9 +16,7 @@ func (s *Service) Help(ctx context.Context, msg *model.TelegramMessage) (tgBotAP
 	}
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, t)
+	reply.ParseMode = tgBotAPI.ModeHTML
 
 	return reply, nil
 }
-
-// TODO на воскресенье
-// 1. Сделать нотификацию о встрече (по времени) - сперва при создании уведомление обоим присылать, потом за 10 минут до начала

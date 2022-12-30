@@ -41,6 +41,7 @@ func (s *Service) Start(ctx context.Context, msg *model.TelegramMessage) (tgBotA
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, res)
 	reply.ReplyMarkup = getStartKeyboard()
+	reply.ParseMode = tgBotAPI.ModeHTML
 
 	return reply, nil
 }
