@@ -226,6 +226,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		StartDate        string
 		Emoji            string
 		TopicName        string
+		TopicLink        string
 		UnitName         string
 		Count            int64
 	}{
@@ -235,6 +236,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		StartDate:        startDateLocal.Format(model.TimeFormat),
 		Emoji:            model.GetEmoji(model.FoodEmojis),
 		TopicName:        topic[0].Name,
+		TopicLink:        topic[0].Link,
 		UnitName:         units[0].Name,
 		Count:            count,
 	})
