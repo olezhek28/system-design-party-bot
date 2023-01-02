@@ -43,7 +43,7 @@ func (s *Service) GetStudents(ctx context.Context, msg *model.TelegramMessage) (
 	reply := tgBotAPI.NewMessage(msg.From.ID, t)
 	reply.ReplyMarkup = getStudentsWithStatsKeyboard(students)
 	if !autoChoiceSpeaker {
-		reply.ReplyMarkup = getStudentsWithListTopicsKeyboard(excludeStudents(students, []int64{msg.From.ID}), msg.Arguments)
+		reply.ReplyMarkup = getStudentsWithListUnitsKeyboard(excludeStudents(students, []int64{msg.From.ID}), msg.Arguments)
 	}
 
 	return reply, nil
@@ -67,7 +67,7 @@ func getStudentsWithStatsKeyboard(students []*model.Student) tgBotAPI.InlineKeyb
 	return helper.BuildKeyboard(buttonsInfo, 2)
 }
 
-func getStudentsWithListTopicsKeyboard(students []*model.Student, args []string) tgBotAPI.InlineKeyboardMarkup {
+func getStudentsWithListUnitsKeyboard(students []*model.Student, args []string) tgBotAPI.InlineKeyboardMarkup {
 	var buttonsInfo []*model.TelegramButtonInfo
 	for _, st := range students {
 		text, err := getStudentText(st)
@@ -78,7 +78,7 @@ func getStudentsWithListTopicsKeyboard(students []*model.Student, args []string)
 
 		buttonsInfo = append(buttonsInfo, &model.TelegramButtonInfo{
 			Text: text,
-			Data: fmt.Sprintf("/%s %s %d", command.ListTopics, helper.SliceToString(args), st.ID),
+			Data: fmt.Sprintf("/%s %s %d", command.ListUnits, helper.SliceToString(args), st.ID),
 		})
 	}
 

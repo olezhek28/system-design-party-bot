@@ -7,7 +7,7 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 )
 
-func GetNotification(initiator *model.Student, topicName string, startDate time.Time, recipientID int64, tmpl string) (tgBotAPI.MessageConfig, error) {
+func GetNotification(initiator *model.Student, unitName string, topicName string, startDate time.Time, recipientID int64, tmpl string) (tgBotAPI.MessageConfig, error) {
 	if initiator == nil {
 		return tgBotAPI.MessageConfig{}, nil
 	}
@@ -19,6 +19,7 @@ func GetNotification(initiator *model.Student, topicName string, startDate time.
 		StartDate        string
 		Emoji            string
 		TopicName        string
+		UnitName         string
 	}{
 		FirstName:        initiator.FirstName,
 		LastName:         initiator.LastName,
@@ -26,6 +27,7 @@ func GetNotification(initiator *model.Student, topicName string, startDate time.
 		StartDate:        startDate.Format(model.TimeFormat),
 		Emoji:            model.GetEmoji(model.FoodEmojis),
 		TopicName:        topicName,
+		UnitName:         unitName,
 	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, nil

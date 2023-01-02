@@ -10,6 +10,7 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
+	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 	"github.com/pkg/errors"
 )
@@ -35,24 +36,55 @@ func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMess
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	var topicIds []int64
-	for _, m := range meets {
-		topicIds = append(topicIds, m.TopicID)
+	pairs := make(map[topicRepository.Pair]struct{}, len(meets))
+	for _, meet := range meets {
+		pairs[topicRepository.Pair{
+			UnitID:  meet.UnitID,
+			TopicID: meet.TopicID,
+		}] = struct{}{}
 	}
 
-	topicsInfo, err := s.topicRepository.GetTopicsByIDs(ctx, topicIds)
+	topicsInfo, err := s.topicRepository.GetList(ctx, &topicRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		Pairs: pairs,
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	topicMap := make(map[int64]*model.Topic)
+	topicMap := make(map[int64]map[int64]*model.Topic, len(topicsInfo))
 	for _, topic := range topicsInfo {
-		topicMap[topic.ID] = topic
+		if _, ok := topicMap[topic.UnitID]; !ok {
+			topicMap[topic.UnitID] = make(map[int64]*model.Topic)
+		}
+
+		topicMap[topic.UnitID][topic.ID] = topic
 	}
 
-	stats := make(map[int64]int64, len(topicsInfo))
+	stats := make(map[int64]map[int64]int64, len(topicsInfo))
 	for _, meet := range meets {
-		stats[meet.TopicID]++
+		if _, ok := stats[meet.UnitID]; !ok {
+			stats[meet.UnitID] = make(map[int64]int64)
+		}
+
+		stats[meet.UnitID][meet.TopicID]++
+	}
+
+	unitIDs := make([]int64, 0, len(stats))
+	for unitID := range stats {
+		unitIDs = append(unitIDs, unitID)
+	}
+
+	unitInfo, err := s.unitRepository.GetUnitsByIDs(ctx, unitIDs)
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
+	}
+
+	unitMap := make(map[int64]*model.Unit, len(unitInfo))
+	for _, unit := range unitInfo {
+		unitMap[unit.ID] = unit
 	}
 
 	speakers, err := s.studentRepository.GetStudentByIDs(ctx, []int64{speakerID})
@@ -77,25 +109,42 @@ func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMess
 
 	res.WriteString(t + "\n")
 
-	for topicID, count := range stats {
-		topic, ok := topicMap[topicID]
+	for unitID, topics := range stats {
+		_, ok := topicMap[unitID]
 		if !ok {
-			errors.Errorf("topic with id %d not found\n", topicID)
-			continue
+			return tgBotAPI.MessageConfig{}, errors.Errorf("unit with id %d not found\n", unitID)
 		}
 
-		t, err = helper.ExecuteTemplate(template.SpeakerStats, struct {
-			TopicName string
-			Count     int64
+		t, err = helper.ExecuteTemplate(template.SpeakerStatsUnitIntroduction, struct {
+			UnitName string
 		}{
-			TopicName: topic.Name,
-			Count:     count,
+			UnitName: unitMap[unitID].Name,
 		})
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
 
 		res.WriteString(t + "\n")
+
+		for topicID, count := range topics {
+			_, ok = topicMap[unitID][topicID]
+			if !ok {
+				return tgBotAPI.MessageConfig{}, errors.Errorf("topic with id %d not found\n", topicID)
+			}
+
+			t, err = helper.ExecuteTemplate(template.SpeakerStats, struct {
+				TopicName string
+				Count     int64
+			}{
+				TopicName: topicMap[unitID][topicID].Name,
+				Count:     count,
+			})
+			if err != nil {
+				return tgBotAPI.MessageConfig{}, err
+			}
+
+			res.WriteString(t + "\n")
+		}
 	}
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, res.String())

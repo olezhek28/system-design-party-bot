@@ -11,6 +11,7 @@ import (
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
 	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
+	unitRepository "github.com/olezhek28/system-design-party-bot/internal/repository/unit"
 	"github.com/olezhek28/system-design-party-bot/internal/service/processor"
 	"github.com/olezhek28/system-design-party-bot/internal/service/scheduler"
 )
@@ -22,6 +23,7 @@ type serviceProvider struct {
 
 	meetingRepository meetingRepository.Repository
 	topicRepository   topicRepository.Repository
+	unitRepository    unitRepository.Repository
 	studentRepository studentRepository.Repository
 
 	processorService *processor.Service
@@ -84,6 +86,14 @@ func (s *serviceProvider) GetTopicRepository(ctx context.Context) topicRepositor
 	return s.topicRepository
 }
 
+func (s *serviceProvider) GetUnitRepository(ctx context.Context) unitRepository.Repository {
+	if s.unitRepository == nil {
+		s.unitRepository = unitRepository.NewRepository(s.GetDB(ctx))
+	}
+
+	return s.unitRepository
+}
+
 func (s *serviceProvider) GetStudentRepository(ctx context.Context) studentRepository.Repository {
 	if s.studentRepository == nil {
 		s.studentRepository = studentRepository.NewRepository(s.GetDB(ctx))
@@ -98,6 +108,7 @@ func (s *serviceProvider) GetProcessorService(ctx context.Context) *processor.Se
 			s.GetTelegramClient(),
 			s.GetMeetingRepository(ctx),
 			s.GetTopicRepository(ctx),
+			s.GetUnitRepository(ctx),
 			s.GetStudentRepository(ctx),
 		)
 	}
@@ -111,6 +122,7 @@ func (s *serviceProvider) GetSchedulerService(ctx context.Context) *scheduler.Se
 			s.GetTelegramClient(),
 			s.GetMeetingRepository(ctx),
 			s.GetTopicRepository(ctx),
+			s.GetUnitRepository(ctx),
 			s.GetStudentRepository(ctx),
 		)
 	}

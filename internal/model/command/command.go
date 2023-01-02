@@ -2,6 +2,7 @@ package command
 
 const (
 	Start                   = "start"
+	ListUnits               = "list_units"
 	ListTopics              = "list_topics"
 	GetStatsBySpeaker       = "get_stats_by_speaker"
 	GetTopicStats           = "get_topic_stats"

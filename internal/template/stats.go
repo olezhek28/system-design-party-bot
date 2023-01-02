@@ -1,6 +1,9 @@
 package template
 
-const SpeakerStats = `					🎯 Тема "{{ .TopicName }}" была пересказана — <b>{{ .Count }} раз(а)</b>.
+const SpeakerStatsUnitIntroduction = `					🚧 Раздел <b>"{{ .UnitName }}"</b>
+`
+
+const SpeakerStats = `									🎯 Тема "{{ .TopicName }}" была пересказана — <b>{{ .Count }} раз(а)</b>.
 `
 
 const SpeakerStatsIntroduction = `🤹‍♂️ А вот и статистика спикера <b>{{ .FirstName }} {{ .LastName }}</b> по разным темам.

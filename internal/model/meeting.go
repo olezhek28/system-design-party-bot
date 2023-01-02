@@ -22,6 +22,7 @@ const (
 
 type Meeting struct {
 	ID         int64     `db:"id"`
+	UnitID     int64     `db:"unit_id"`
 	TopicID    int64     `db:"topic_id"`
 	Status     string    `db:"status"`
 	StartDate  time.Time `db:"start_date"`
@@ -31,6 +32,7 @@ type Meeting struct {
 }
 
 type UpdateMeeting struct {
+	UnitID     sql.NullInt64
 	TopicID    sql.NullInt64
 	Status     sql.NullString
 	StartDate  sql.NullTime

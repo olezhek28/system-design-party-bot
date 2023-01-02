@@ -72,7 +72,13 @@ func (s *Service) GetAllCalendar(ctx context.Context, msg *model.TelegramMessage
 	res.WriteString(t + "\n")
 
 	for _, m := range meets {
-		topic, ok := topicMap[m.TopicID]
+		unit, ok := topicMap[m.UnitID]
+		if !ok {
+			errors.Errorf("unit with id %d not found\n", m.UnitID)
+			continue
+		}
+
+		topic, ok := unit[m.TopicID]
 		if !ok {
 			errors.Errorf("topic with id %d not found\n", m.TopicID)
 			continue

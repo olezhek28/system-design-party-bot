@@ -5,9 +5,8 @@ import (
 	"time"
 )
 
-type Topic struct {
+type Unit struct {
 	ID          int64        `db:"id"`
-	UnitID      int64        `db:"unit_id"`
 	Name        string       `db:"name"`
 	Description string       `db:"description"`
 	Link        string       `db:"link"`

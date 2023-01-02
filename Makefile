@@ -7,7 +7,7 @@ update-all-deps:
 	go get -u ./... && go mod tidy
 
 LOCAL_MIGRATION_DIR=./migrations
-LOCAL_MIGRATION_DSN="host=localhost port=54321 dbname=system-design-party-bot user=system-design-party-bot-user password=system-design-party-bot-password sslmode=disable"
+LOCAL_MIGRATION_DSN="host=localhost port=22222 dbname=system-design-party-bot user=system-design-party-bot-user password=system-design-party-bot-password sslmode=disable"
 
 .PHONY: install-goose
 .install-goose:

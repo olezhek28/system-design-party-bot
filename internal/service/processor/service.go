@@ -13,6 +13,7 @@ import (
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
 	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
 	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
+	unitRepository "github.com/olezhek28/system-design-party-bot/internal/repository/unit"
 	"github.com/pkg/errors"
 )
 
@@ -23,6 +24,7 @@ type Service struct {
 
 	meetingRepository meetingRepository.Repository
 	topicRepository   topicRepository.Repository
+	unitRepository    unitRepository.Repository
 	studentRepository studentRepository.Repository
 }
 
@@ -30,12 +32,14 @@ func NewService(
 	telegramClient telegram.Client,
 	meetingRepository meetingRepository.Repository,
 	topicRepository topicRepository.Repository,
+	unitRepository unitRepository.Repository,
 	studentRepository studentRepository.Repository,
 ) *Service {
 	return &Service{
 		telegramClient:    telegramClient,
 		meetingRepository: meetingRepository,
 		topicRepository:   topicRepository,
+		unitRepository:    unitRepository,
 		studentRepository: studentRepository,
 	}
 }
@@ -117,6 +121,7 @@ func (s *Service) executeCallback(ctx context.Context, event tgBotAPI.Update) (t
 func (s *Service) getCommandMap() map[string]Handler {
 	return map[string]Handler{
 		command.Start:                   s.Start,
+		command.ListUnits:               s.ListUnits,
 		command.ListTopics:              s.ListTopics,
 		command.GetStatsBySpeaker:       s.GetStatsBySpeaker,
 		command.GetTopicStats:           s.GetTopicStats,

@@ -55,7 +55,15 @@ func (s *Service) sendNotification(ctx context.Context) error {
 			return fmt.Errorf("listener with id %d not found", meet.ListenerID)
 		}
 
-		topic, errMeet := s.topicRepository.GetTopicsByIDs(ctx, []int64{meet.TopicID})
+		unit, errMeet := s.unitRepository.GetUnitsByIDs(ctx, []int64{meet.UnitID})
+		if errMeet != nil {
+			return errMeet
+		}
+		if len(unit) == 0 {
+			return fmt.Errorf("unit with id %d not found", meet.UnitID)
+		}
+
+		topic, errMeet := s.topicRepository.GetTopicsByIDs(ctx, []int64{meet.UnitID}, []int64{meet.TopicID})
 		if errMeet != nil {
 			return errMeet
 		}
@@ -63,7 +71,7 @@ func (s *Service) sendNotification(ctx context.Context) error {
 			return fmt.Errorf("topic with id %d not found", meet.TopicID)
 		}
 
-		err = s.sendNotificationToPartners(speaker[0], listener[0], topic[0], meet.StartDate)
+		err = s.sendNotificationToPartners(speaker[0], listener[0], unit[0], topic[0], meet.StartDate)
 		if err != nil {
 			return err
 		}
@@ -72,14 +80,14 @@ func (s *Service) sendNotification(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) sendNotificationToPartners(speaker *model.Student, listener *model.Student, topic *model.Topic, startDate time.Time) error {
-	speakerMsg, err := helper.GetNotification(listener, topic.Name, startDate, speaker.TelegramID, template.NotificationBeforeStart)
+func (s *Service) sendNotificationToPartners(speaker *model.Student, listener *model.Student, unit *model.Unit, topic *model.Topic, startDate time.Time) error {
+	speakerMsg, err := helper.GetNotification(listener, unit.Name, topic.Name, startDate, speaker.TelegramID, template.NotificationBeforeStart)
 	if err != nil {
 		fmt.Printf("error while getting notification message: %v\n", err)
 		return err
 	}
 
-	listenerMsg, err := helper.GetNotification(speaker, topic.Name, startDate, listener.TelegramID, template.NotificationBeforeStart)
+	listenerMsg, err := helper.GetNotification(speaker, unit.Name, topic.Name, startDate, listener.TelegramID, template.NotificationBeforeStart)
 	if err != nil {
 		fmt.Printf("error while getting notification message: %v\n", err)
 		return err

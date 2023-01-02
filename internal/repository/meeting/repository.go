@@ -20,7 +20,7 @@ type Repository interface {
 	GetList(ctx context.Context, filter *Query) ([]*model.Meeting, error)
 	Update(ctx context.Context, ids []int64, updateMeeting *model.UpdateMeeting) error
 	GetSpeakerCountByTopic(ctx context.Context, topicID int64, speakerID int64) (int64, error)
-	GetSpeakersStats(ctx context.Context, topicID int64, excludeSpeakerID int64) ([]*model.Stats, error)
+	GetSpeakersStats(ctx context.Context, unitID int64, topicID int64, excludeSpeakerID int64) ([]*model.Stats, error)
 }
 
 type repository struct {
@@ -37,7 +37,7 @@ func NewRepository(db db.Client) *repository {
 func (r *repository) Create(ctx context.Context, meeting *model.Meeting) (int64, error) {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns("topic_id", "status", "start_date", "speaker_id", "listener_id").
+		Columns("unit_id", "topic_id", "status", "start_date", "speaker_id", "listener_id").
 		Values(meeting.TopicID, meeting.Status, meeting.StartDate, meeting.SpeakerID, meeting.ListenerID).
 		Suffix("RETURNING id")
 
@@ -87,7 +87,7 @@ func (r *repository) Get(ctx context.Context, id int64) (*model.Meeting, error) 
 }
 
 func (r *repository) GetList(ctx context.Context, filter *Query) ([]*model.Meeting, error) {
-	builder := sq.Select("id, topic_id, status, start_date, speaker_id, listener_id, created_at").
+	builder := sq.Select("id, unit_id, topic_id, status, start_date, speaker_id, listener_id, created_at").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName)
 
@@ -119,6 +119,9 @@ func (r *repository) Update(ctx context.Context, ids []int64, updateMeeting *mod
 		PlaceholderFormat(sq.Dollar).
 		Where(sq.Eq{"id": ids})
 
+	if updateMeeting.UnitID.Valid {
+		builder = builder.Set("unit_id", updateMeeting.UnitID.Int64)
+	}
 	if updateMeeting.TopicID.Valid {
 		builder = builder.Set("topic_id", updateMeeting.TopicID.Int64)
 	}
@@ -182,12 +185,13 @@ func (r *repository) GetSpeakerCountByTopic(ctx context.Context, topicID int64, 
 
 // GetSpeakersStats ...
 // select topic_id, speaker_id, count(*) from meeting group by topic_id, speaker_id, status having status='finished';
-func (r *repository) GetSpeakersStats(ctx context.Context, topicID int64, excludeSpeakerID int64) ([]*model.Stats, error) {
-	builder := sq.Select("topic_id, speaker_id, count(*)").
+func (r *repository) GetSpeakersStats(ctx context.Context, unitID int64, topicID int64, excludeSpeakerID int64) ([]*model.Stats, error) {
+	builder := sq.Select("unit_id, topic_id, speaker_id, count(*)").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
 		Where(sq.Eq{"topic_id": topicID}).
-		GroupBy("topic_id, speaker_id, status").
+		Where(sq.Eq{"unit_id": unitID}).
+		GroupBy("unit_id, topic_id, speaker_id, status").
 		Having(sq.And{
 			sq.Eq{"status": model.MeetingStatusFinished},
 			sq.NotEq{"speaker_id": excludeSpeakerID},

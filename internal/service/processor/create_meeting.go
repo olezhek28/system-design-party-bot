@@ -28,30 +28,36 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		reply.ReplyMarkup = getChoiceModeKeyboard()
 		return reply, nil
 	}
-	if len(msg.Arguments) < 3 {
+	if len(msg.Arguments) < 4 {
 		return tgBotAPI.MessageConfig{}, errors.New("not enough arguments")
 	}
-	if len(msg.Arguments) < 8 {
+	if len(msg.Arguments) < 9 {
 		var topicID int64
 		topicID, err = strconv.ParseInt(msg.Arguments[0], 10, 64)
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
 
+		var unitID int64
+		unitID, err = strconv.ParseInt(msg.Arguments[1], 10, 64)
+		if err != nil {
+			return tgBotAPI.MessageConfig{}, err
+		}
+
 		var speakerID int64
-		speakerID, err = strconv.ParseInt(msg.Arguments[1], 10, 64)
+		speakerID, err = strconv.ParseInt(msg.Arguments[2], 10, 64)
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
 
 		var listenerID int64
-		listenerID, err = strconv.ParseInt(msg.Arguments[2], 10, 64)
+		listenerID, err = strconv.ParseInt(msg.Arguments[3], 10, 64)
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
 
 		if speakerID == 0 {
-			speakerID, err = s.getBestSpeaker(ctx, topicID, listenerID)
+			speakerID, err = s.getBestSpeaker(ctx, unitID, topicID, listenerID)
 			if err != nil {
 				return tgBotAPI.MessageConfig{}, err
 			}
@@ -67,12 +73,21 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		}
 
 		var topicsInfo []*model.Topic
-		topicsInfo, err = s.topicRepository.GetTopicsByIDs(ctx, []int64{topicID})
+		topicsInfo, err = s.topicRepository.GetTopicsByIDs(ctx, []int64{unitID}, []int64{topicID})
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
 		if len(topicsInfo) == 0 {
 			return tgBotAPI.MessageConfig{}, errors.New("topic not found")
+		}
+
+		var unitsInfo []*model.Unit
+		unitsInfo, err = s.unitRepository.GetUnitsByIDs(ctx, []int64{unitID})
+		if err != nil {
+			return tgBotAPI.MessageConfig{}, err
+		}
+		if len(unitsInfo) == 0 {
+			return tgBotAPI.MessageConfig{}, errors.New("unit not found")
 		}
 
 		var count int64
@@ -88,6 +103,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 			TelegramUsername string
 			Emoji            string
 			TopicName        string
+			UnitName         string
 			Count            int64
 		}{
 			FirstName:        speakersInfo[0].FirstName,
@@ -95,6 +111,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 			TelegramUsername: speakersInfo[0].TelegramUsername,
 			Emoji:            model.GetEmoji(model.FoodEmojis),
 			TopicName:        topicsInfo[0].Name,
+			UnitName:         unitsInfo[0].Name,
 			Count:            count,
 		})
 		if err != nil {
@@ -126,24 +143,31 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	speakerID, err := strconv.ParseInt(msg.Arguments[6], 10, 64)
+	var unitID int64
+	unitID, err = strconv.ParseInt(msg.Arguments[6], 10, 64)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	listenerID, err := strconv.ParseInt(msg.Arguments[7], 10, 64)
+	speakerID, err := strconv.ParseInt(msg.Arguments[7], 10, 64)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	if speakerID == 0 {
-		speakerID, err = s.getBestSpeaker(ctx, topicID, listenerID)
-		if err != nil {
-			return tgBotAPI.MessageConfig{}, err
-		}
+	listenerID, err := strconv.ParseInt(msg.Arguments[8], 10, 64)
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
 	}
+
+	//if speakerID == 0 {
+	//	speakerID, err = s.getBestSpeaker(ctx, topicID, listenerID)
+	//	if err != nil {
+	//		return tgBotAPI.MessageConfig{}, err
+	//	}
+	//}
 
 	meetingID1, err := s.meetingRepository.Create(ctx, &model.Meeting{
+		UnitID:     unitID,
 		TopicID:    topicID,
 		Status:     model.MeetingStatusNew,
 		StartDate:  startDateUTC,
@@ -155,6 +179,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 	}
 
 	meetingID2, err := s.meetingRepository.Create(ctx, &model.Meeting{
+		UnitID:     unitID,
 		TopicID:    topicID,
 		Status:     model.MeetingStatusNew,
 		StartDate:  startDateUTC,
@@ -173,12 +198,20 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, errors.New("speaker not found")
 	}
 
-	topic, err := s.topicRepository.GetTopicsByIDs(ctx, []int64{topicID})
+	topic, err := s.topicRepository.GetTopicsByIDs(ctx, []int64{unitID}, []int64{topicID})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
 	if len(topic) == 0 {
 		return tgBotAPI.MessageConfig{}, errors.New("topic not found")
+	}
+
+	units, err := s.unitRepository.GetUnitsByIDs(ctx, []int64{unitID})
+	if err != nil {
+		return tgBotAPI.MessageConfig{}, err
+	}
+	if len(units) == 0 {
+		return tgBotAPI.MessageConfig{}, errors.New("unit not found")
 	}
 
 	count, err := s.meetingRepository.GetSpeakerCountByTopic(ctx, topicID, speakerID)
@@ -193,6 +226,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		StartDate        string
 		Emoji            string
 		TopicName        string
+		UnitName         string
 		Count            int64
 	}{
 		FirstName:        speakersInfo[0].FirstName,
@@ -201,6 +235,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		StartDate:        startDateLocal.Format(model.TimeFormat),
 		Emoji:            model.GetEmoji(model.FoodEmojis),
 		TopicName:        topic[0].Name,
+		UnitName:         units[0].Name,
 		Count:            count,
 	})
 	if err != nil {
@@ -223,7 +258,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		startDateListener = startDateUTC.Add(time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute)
 	}
 
-	notificationMsg, err := helper.GetNotification(listeners[0], topic[0].Name, startDateListener, speakersInfo[0].TelegramID, template.NotificationAfterCreate)
+	notificationMsg, err := helper.GetNotification(listeners[0], units[0].Name, topic[0].Name, startDateListener, speakersInfo[0].TelegramID, template.NotificationAfterCreate)
 	if err != nil {
 		fmt.Printf("error while getting notification message: %v\n", err)
 	}
@@ -240,8 +275,8 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 	return reply, nil
 }
 
-func (s *Service) getBestSpeaker(ctx context.Context, topicID int64, listenerID int64) (int64, error) {
-	stats, err := s.meetingRepository.GetSpeakersStats(ctx, topicID, listenerID)
+func (s *Service) getBestSpeaker(ctx context.Context, unitID int64, topicID int64, listenerID int64) (int64, error) {
+	stats, err := s.meetingRepository.GetSpeakersStats(ctx, unitID, topicID, listenerID)
 	//	GetList(ctx, &meetingRepository.Query{
 	//	QueryFilter: model.QueryFilter{
 	//		AllData: true,
@@ -282,7 +317,7 @@ func getChoiceModeKeyboard() tgBotAPI.InlineKeyboardMarkup {
 			),
 			tgBotAPI.NewInlineKeyboardButtonData(
 				fmt.Sprintf("%s Найди плииииз", model.GetEmoji(model.ThingsEmojis)),
-				fmt.Sprintf("/%s %t", command.ListTopics, true),
+				fmt.Sprintf("/%s %t", command.ListUnits, true),
 			),
 		),
 	)

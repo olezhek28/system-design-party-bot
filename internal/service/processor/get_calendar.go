@@ -26,6 +26,7 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 
 	var timezone time.Duration
 	if user[0].Timezone.Valid {
+		// TODO вынести в отдельную функцию
 		hours := user[0].Timezone.Int64 / 60
 		minutes := user[0].Timezone.Int64 % 60
 
@@ -66,10 +67,14 @@ func (s *Service) GetCalendar(ctx context.Context, msg *model.TelegramMessage) (
 	res.WriteString(t + "\n")
 
 	for _, m := range meets {
-		topic, ok := topicMap[m.TopicID]
+		unit, ok := topicMap[m.UnitID]
 		if !ok {
-			errors.Errorf("topic with id %d not found\n", m.TopicID)
-			continue
+			return tgBotAPI.MessageConfig{}, errors.Errorf("unit with id %d not found\n", m.UnitID)
+		}
+
+		topic, ok := unit[m.TopicID]
+		if !ok {
+			return tgBotAPI.MessageConfig{}, errors.Errorf("topic with id %d not found\n", m.TopicID)
 		}
 
 		listener, ok := listenerMap[m.ListenerID]
