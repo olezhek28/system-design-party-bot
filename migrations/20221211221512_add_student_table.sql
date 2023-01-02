@@ -6,6 +6,7 @@ create table student
     last_name         text      not null,
     telegram_id       integer   not null,
     telegram_username text      not null,
+    timezone          integer,
     created_at        timestamp not null default now()
 );
 

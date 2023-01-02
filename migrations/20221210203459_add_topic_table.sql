@@ -1,7 +1,8 @@
 -- +goose Up
 create table topic
 (
-    id          bigserial primary key,
+    id          bigint    not null,
+    unit_id     bigint references unit (id),
     name        text      not null,
     description text      not null,
     link        text      not null,

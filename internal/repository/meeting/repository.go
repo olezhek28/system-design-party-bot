@@ -19,7 +19,7 @@ type Repository interface {
 	Get(ctx context.Context, id int64) (*model.Meeting, error)
 	GetList(ctx context.Context, filter *Query) ([]*model.Meeting, error)
 	Update(ctx context.Context, ids []int64, updateMeeting *model.UpdateMeeting) error
-	GetSpeakerCountByTopic(ctx context.Context, topicID int64, speakerID int64) (int64, error)
+	GetSpeakerCountByTopic(ctx context.Context, unitID int64, topicID int64, speakerID int64) (int64, error)
 	GetSpeakersStats(ctx context.Context, unitID int64, topicID int64, excludeSpeakerID int64) ([]*model.Stats, error)
 }
 
@@ -156,10 +156,11 @@ func (r *repository) Update(ctx context.Context, ids []int64, updateMeeting *mod
 	return nil
 }
 
-func (r *repository) GetSpeakerCountByTopic(ctx context.Context, topicID int64, speakerID int64) (int64, error) {
+func (r *repository) GetSpeakerCountByTopic(ctx context.Context, unitID int64, topicID int64, speakerID int64) (int64, error) {
 	builder := sq.Select("count(*)").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
+		Where(sq.Eq{"unit_id": unitID}).
 		Where(sq.Eq{"topic_id": topicID}).
 		Where(sq.Eq{"speaker_id": speakerID}).
 		Where(sq.Eq{"status": model.MeetingStatusFinished})

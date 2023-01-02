@@ -91,7 +91,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		}
 
 		var count int64
-		count, err = s.meetingRepository.GetSpeakerCountByTopic(ctx, topicID, speakerID)
+		count, err = s.meetingRepository.GetSpeakerCountByTopic(ctx, unitID, topicID, speakerID)
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
@@ -214,7 +214,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, errors.New("unit not found")
 	}
 
-	count, err := s.meetingRepository.GetSpeakerCountByTopic(ctx, topicID, speakerID)
+	count, err := s.meetingRepository.GetSpeakerCountByTopic(ctx, unitID, topicID, speakerID)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
