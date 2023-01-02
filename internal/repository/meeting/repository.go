@@ -38,7 +38,7 @@ func (r *repository) Create(ctx context.Context, meeting *model.Meeting) (int64,
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns("unit_id", "topic_id", "status", "start_date", "speaker_id", "listener_id").
-		Values(meeting.TopicID, meeting.Status, meeting.StartDate, meeting.SpeakerID, meeting.ListenerID).
+		Values(meeting.UnitID, meeting.TopicID, meeting.Status, meeting.StartDate, meeting.SpeakerID, meeting.ListenerID).
 		Suffix("RETURNING id")
 
 	query, v, err := builder.ToSql()
