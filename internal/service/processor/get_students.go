@@ -9,11 +9,16 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/model/command"
+	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
 func (s *Service) GetStudents(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	students, err := s.studentRepository.GetStudentList(ctx)
+	students, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

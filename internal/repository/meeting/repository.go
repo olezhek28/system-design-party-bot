@@ -19,8 +19,7 @@ type Repository interface {
 	Get(ctx context.Context, id int64) (*model.Meeting, error)
 	GetList(ctx context.Context, filter *Query) ([]*model.Meeting, error)
 	Update(ctx context.Context, ids []int64, updateMeeting *model.UpdateMeeting) error
-	GetSpeakerCountByTopic(ctx context.Context, unitID int64, topicID int64, speakerID int64) (int64, error)
-	GetSpeakersStats(ctx context.Context, unitID int64, topicID int64, excludeSpeakerID int64) ([]*model.Stats, error)
+	GetSpeakerStatByTopic(ctx context.Context, unitID int64, topicID int64, speakerID int64) (int64, error)
 }
 
 type repository struct {
@@ -156,7 +155,7 @@ func (r *repository) Update(ctx context.Context, ids []int64, updateMeeting *mod
 	return nil
 }
 
-func (r *repository) GetSpeakerCountByTopic(ctx context.Context, unitID int64, topicID int64, speakerID int64) (int64, error) {
+func (r *repository) GetSpeakerStatByTopic(ctx context.Context, unitID int64, topicID int64, speakerID int64) (int64, error) {
 	builder := sq.Select("count(*)").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
@@ -171,7 +170,7 @@ func (r *repository) GetSpeakerCountByTopic(ctx context.Context, unitID int64, t
 	}
 
 	q := db.Query{
-		Name:     "meeting_repository.GetSpeakerCountByTopic",
+		Name:     "meeting_repository.GetSpeakerStatByTopic",
 		QueryRaw: query,
 	}
 
@@ -182,37 +181,4 @@ func (r *repository) GetSpeakerCountByTopic(ctx context.Context, unitID int64, t
 	}
 
 	return count, nil
-}
-
-// GetSpeakersStats ...
-// select topic_id, speaker_id, count(*) from meeting group by topic_id, speaker_id, status having status='finished';
-func (r *repository) GetSpeakersStats(ctx context.Context, unitID int64, topicID int64, excludeSpeakerID int64) ([]*model.Stats, error) {
-	builder := sq.Select("unit_id, topic_id, speaker_id, count(*)").
-		PlaceholderFormat(sq.Dollar).
-		From(tableName).
-		Where(sq.Eq{"topic_id": topicID}).
-		Where(sq.Eq{"unit_id": unitID}).
-		GroupBy("unit_id, topic_id, speaker_id, status").
-		Having(sq.And{
-			sq.Eq{"status": model.MeetingStatusFinished},
-			sq.NotEq{"speaker_id": excludeSpeakerID},
-		})
-
-	query, v, err := builder.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	q := db.Query{
-		Name:     "meeting_repository.GetSpeakersStats",
-		QueryRaw: query,
-	}
-
-	var res []*model.Stats
-	err = r.db.DB().SelectContext(ctx, &res, q, v...)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
 }

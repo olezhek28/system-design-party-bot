@@ -5,7 +5,6 @@ package student_repository
 
 import (
 	"context"
-	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
@@ -16,14 +15,10 @@ const tableName = "student"
 
 // Repository ...
 type Repository interface {
-	GetStudentByIDs(ctx context.Context, ids []int64) ([]*model.Student, error)
-	GetStudentByTelegramChatIDs(ctx context.Context, ids []int64) ([]*model.Student, error)
-	CreateStudent(ctx context.Context, student *model.Student) error
-	IsExistStudent(ctx context.Context, telegramChatID int64) (bool, error)
-	GetRandomStudent(ctx context.Context, excludeSpeakerTelegramID int64) (*model.Student, error)
-	GetStudentList(ctx context.Context) ([]*model.Student, error)
-	SetTimezone(ctx context.Context, telegramID int64, timezone int64) (int64, error)
-	GetTimezone(ctx context.Context, telegramID int64) (int64, error)
+	Create(ctx context.Context, student *model.Student) error
+	GetList(ctx context.Context, filter *Query) ([]*model.Student, error)
+	Update(ctx context.Context, telegramID int64, updateStudent *model.UpdateStudent) error
+	IsExist(ctx context.Context, telegramChatID int64) (bool, error)
 }
 
 type repository struct {
@@ -37,63 +32,7 @@ func NewRepository(db db.Client) Repository {
 	}
 }
 
-func (r *repository) GetStudentByIDs(ctx context.Context, ids []int64) ([]*model.Student, error) {
-	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, timezone, created_at").
-		PlaceholderFormat(sq.Dollar).
-		From(tableName)
-
-	if len(ids) > 0 {
-		builder = builder.Where(sq.Eq{"id": ids})
-	}
-
-	query, v, err := builder.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	q := db.Query{
-		Name:     "topic_repository.GetStudentByIDs",
-		QueryRaw: query,
-	}
-
-	var res []*model.Student
-	err = r.db.DB().SelectContext(ctx, &res, q, v...)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
-func (r *repository) GetStudentByTelegramChatIDs(ctx context.Context, ids []int64) ([]*model.Student, error) {
-	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, timezone, created_at").
-		PlaceholderFormat(sq.Dollar).
-		From(tableName)
-
-	if len(ids) > 0 {
-		builder = builder.Where(sq.Eq{"telegram_id": ids})
-	}
-
-	query, v, err := builder.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	q := db.Query{
-		Name:     "topic_repository.GetStudentByTelegramChatIDs",
-		QueryRaw: query,
-	}
-
-	var res []*model.Student
-	err = r.db.DB().SelectContext(ctx, &res, q, v...)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
-func (r *repository) CreateStudent(ctx context.Context, student *model.Student) error {
+func (r *repository) Create(ctx context.Context, student *model.Student) error {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns("first_name", "last_name", "telegram_id", "telegram_username").
@@ -105,7 +44,7 @@ func (r *repository) CreateStudent(ctx context.Context, student *model.Student) 
 	}
 
 	q := db.Query{
-		Name:     "topic_repository.CreateStudent",
+		Name:     "student_repository.Create",
 		QueryRaw: query,
 	}
 
@@ -117,7 +56,71 @@ func (r *repository) CreateStudent(ctx context.Context, student *model.Student) 
 	return nil
 }
 
-func (r *repository) IsExistStudent(ctx context.Context, telegramChatID int64) (bool, error) {
+func (r *repository) GetList(ctx context.Context, filter *Query) ([]*model.Student, error) {
+	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, timezone, created_at").
+		PlaceholderFormat(sq.Dollar).
+		From(tableName)
+
+	if filter != nil {
+		builder = filter.executeFilter(builder)
+	}
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := db.Query{
+		Name:     "student_repository.GetList",
+		QueryRaw: query,
+	}
+
+	var res []*model.Student
+	err = r.db.DB().SelectContext(ctx, &res, q, v...)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (r *repository) Update(ctx context.Context, telegramID int64, updateStudent *model.UpdateStudent) error {
+	builder := sq.Update(tableName).
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{"telegram_id": telegramID})
+
+	if updateStudent.FirstName.Valid {
+		builder = builder.Set("first_name", updateStudent.FirstName.String)
+	}
+	if updateStudent.LastName.Valid {
+		builder = builder.Set("last_name", updateStudent.LastName.String)
+	}
+	if updateStudent.TelegramUsername.Valid {
+		builder = builder.Set("telegram_username", updateStudent.TelegramUsername.String)
+	}
+	if updateStudent.Timezone.Valid {
+		builder = builder.Set("timezone", updateStudent.Timezone.Int64)
+	}
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	q := db.Query{
+		Name:     "student_repository.Update",
+		QueryRaw: query,
+	}
+
+	_, err = r.db.DB().ExecContext(ctx, q, v...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *repository) IsExist(ctx context.Context, telegramChatID int64) (bool, error) {
 	builder := sq.Select("id").
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
@@ -130,7 +133,7 @@ func (r *repository) IsExistStudent(ctx context.Context, telegramChatID int64) (
 	}
 
 	q := db.Query{
-		Name:     "topic_repository.IsExistStudent",
+		Name:     "student_repository.IsExist",
 		QueryRaw: query,
 	}
 
@@ -141,108 +144,4 @@ func (r *repository) IsExistStudent(ctx context.Context, telegramChatID int64) (
 	}
 
 	return len(ids) > 0, nil
-}
-
-func (r *repository) GetRandomStudent(ctx context.Context, excludeSpeakerTelegramID int64) (*model.Student, error) {
-	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, timezone, created_at").
-		PlaceholderFormat(sq.Dollar).
-		From(tableName).
-		OrderBy("RANDOM()").
-		Where(sq.NotEq{"telegram_id": excludeSpeakerTelegramID}).
-		Limit(1)
-
-	query, v, err := builder.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	q := db.Query{
-		Name:     "topic_repository.GetRandomStudent",
-		QueryRaw: query,
-	}
-
-	var res []*model.Student
-	err = r.db.DB().SelectContext(ctx, &res, q, v...)
-	if err != nil {
-		return nil, err
-	}
-	if len(res) == 0 {
-		return nil, nil
-	}
-
-	return res[0], nil
-}
-
-func (r *repository) GetStudentList(ctx context.Context) ([]*model.Student, error) {
-	builder := sq.Select("id, first_name, last_name, telegram_id, telegram_username, timezone, created_at").
-		PlaceholderFormat(sq.Dollar).
-		From(tableName)
-
-	query, v, err := builder.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	q := db.Query{
-		Name:     "topic_repository.GetStudentList",
-		QueryRaw: query,
-	}
-
-	var res []*model.Student
-	err = r.db.DB().SelectContext(ctx, &res, q, v...)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
-func (r *repository) SetTimezone(ctx context.Context, telegramID int64, timezone int64) (int64, error) {
-	builder := sq.Update(tableName).
-		PlaceholderFormat(sq.Dollar).
-		Set("timezone", timezone).
-		Where(sq.Eq{"telegram_id": telegramID})
-
-	query, v, err := builder.ToSql()
-	if err != nil {
-		return 0, err
-	}
-
-	q := db.Query{
-		Name:     "topic_repository.SetTimezone",
-		QueryRaw: query,
-	}
-
-	res, err := r.db.DB().ExecContext(ctx, q, v...)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.RowsAffected(), nil
-}
-
-func (r *repository) GetTimezone(ctx context.Context, telegramID int64) (int64, error) {
-	builder := sq.Select("timezone").
-		PlaceholderFormat(sq.Dollar).
-		From(tableName).
-		Where(sq.Eq{"telegram_id": telegramID}).
-		Limit(1)
-
-	query, v, err := builder.ToSql()
-	if err != nil {
-		return 0, err
-	}
-
-	q := db.Query{
-		Name:     "topic_repository.GetTimezone",
-		QueryRaw: query,
-	}
-
-	var res sql.NullInt64
-	err = r.db.DB().QueryRowContext(ctx, q, v...).Scan(&res)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.Int64, nil
 }

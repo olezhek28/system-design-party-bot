@@ -14,3 +14,10 @@ type Student struct {
 	Timezone         sql.NullInt64 `db:"timezone"`
 	CreatedAt        time.Time     `db:"created_at"`
 }
+
+type UpdateStudent struct {
+	FirstName        sql.NullString
+	LastName         sql.NullString
+	TelegramUsername sql.NullString
+	Timezone         sql.NullInt64
+}

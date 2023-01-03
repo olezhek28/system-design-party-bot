@@ -10,6 +10,7 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/model/command"
+	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
@@ -19,7 +20,12 @@ func (s *Service) ListTopics(ctx context.Context, msg *model.TelegramMessage) (t
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	topics, err := s.topicRepository.GetTopicsByIDs(ctx, []int64{unitID}, []int64{})
+	topics, err := s.topicRepository.GetList(ctx, &topicRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		UnitIDs: []int64{unitID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

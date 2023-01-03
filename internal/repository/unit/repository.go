@@ -15,7 +15,7 @@ const tableName = "unit"
 
 // Repository ...
 type Repository interface {
-	GetUnitsByIDs(ctx context.Context, ids []int64) ([]*model.Unit, error)
+	GetList(ctx context.Context, filter *Query) ([]*model.Unit, error)
 }
 
 type repository struct {
@@ -29,15 +29,13 @@ func NewRepository(db db.Client) *repository {
 	}
 }
 
-// GetUnitsByIDs ...
-func (r *repository) GetUnitsByIDs(ctx context.Context, ids []int64) ([]*model.Unit, error) {
+func (r *repository) GetList(ctx context.Context, filter *Query) ([]*model.Unit, error) {
 	builder := sq.Select("id, name, description, link, created_at, updated_at").
 		PlaceholderFormat(sq.Dollar).
-		From(tableName).
-		OrderBy("id ASC")
+		From(tableName)
 
-	if len(ids) > 0 {
-		builder = builder.Where(sq.Eq{"id": ids})
+	if filter != nil {
+		builder = filter.executeFilter(builder)
 	}
 
 	query, v, err := builder.ToSql()
@@ -46,7 +44,7 @@ func (r *repository) GetUnitsByIDs(ctx context.Context, ids []int64) ([]*model.U
 	}
 
 	q := db.Query{
-		Name:     "topic_repository.GetTopicList",
+		Name:     "unit_repository.GetList",
 		QueryRaw: query,
 	}
 

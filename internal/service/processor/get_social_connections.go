@@ -10,11 +10,17 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/model/command"
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
+	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
 func (s *Service) GetSocialConnections(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	user, err := s.studentRepository.GetStudentByTelegramChatIDs(ctx, []int64{msg.From.ID})
+	user, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		TelegramIDs: []int64{msg.From.ID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -33,7 +39,11 @@ func (s *Service) GetSocialConnections(ctx context.Context, msg *model.TelegramM
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	students, err := s.studentRepository.GetStudentList(ctx)
+	students, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

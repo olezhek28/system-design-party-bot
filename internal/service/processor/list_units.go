@@ -10,11 +10,17 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/model/command"
+	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
+	unitRepository "github.com/olezhek28/system-design-party-bot/internal/repository/unit"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
 func (s *Service) ListUnits(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	units, err := s.unitRepository.GetUnitsByIDs(ctx, []int64{})
+	units, err := s.unitRepository.GetList(ctx, &unitRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -54,7 +60,12 @@ func (s *Service) ListUnits(ctx context.Context, msg *model.TelegramMessage) (tg
 	reply := tgBotAPI.NewMessage(msg.From.ID, res.String())
 
 	var users []*model.Student
-	users, err = s.studentRepository.GetStudentByTelegramChatIDs(ctx, []int64{msg.From.ID})
+	users, err = s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		TelegramIDs: []int64{msg.From.ID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

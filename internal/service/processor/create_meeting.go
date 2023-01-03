@@ -10,12 +10,20 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/model/command"
+	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
+	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
+	unitRepository "github.com/olezhek28/system-design-party-bot/internal/repository/unit"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 	"github.com/pkg/errors"
 )
 
 func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	user, err := s.studentRepository.GetStudentByTelegramChatIDs(ctx, []int64{msg.From.ID})
+	user, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		TelegramIDs: []int64{msg.From.ID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -64,7 +72,12 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		}
 
 		var speakersInfo []*model.Student
-		speakersInfo, err = s.studentRepository.GetStudentByIDs(ctx, []int64{speakerID})
+		speakersInfo, err = s.studentRepository.GetList(ctx, &studentRepository.Query{
+			QueryFilter: model.QueryFilter{
+				AllData: true,
+			},
+			IDs: []int64{speakerID},
+		})
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
@@ -73,7 +86,13 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		}
 
 		var topicsInfo []*model.Topic
-		topicsInfo, err = s.topicRepository.GetTopicsByIDs(ctx, []int64{unitID}, []int64{topicID})
+		topicsInfo, err = s.topicRepository.GetList(ctx, &topicRepository.Query{
+			QueryFilter: model.QueryFilter{
+				AllData: true,
+			},
+			UnitIDs:  []int64{unitID},
+			TopicIDs: []int64{topicID},
+		})
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
@@ -82,7 +101,12 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		}
 
 		var unitsInfo []*model.Unit
-		unitsInfo, err = s.unitRepository.GetUnitsByIDs(ctx, []int64{unitID})
+		unitsInfo, err = s.unitRepository.GetList(ctx, &unitRepository.Query{
+			QueryFilter: model.QueryFilter{
+				AllData: true,
+			},
+			UnitIDs: []int64{unitID},
+		})
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
@@ -91,7 +115,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		}
 
 		var count int64
-		count, err = s.meetingRepository.GetSpeakerCountByTopic(ctx, unitID, topicID, speakerID)
+		count, err = s.meetingRepository.GetSpeakerStatByTopic(ctx, unitID, topicID, speakerID)
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
@@ -190,7 +214,12 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	speakersInfo, err := s.studentRepository.GetStudentByIDs(ctx, []int64{speakerID})
+	speakersInfo, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		IDs: []int64{speakerID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -198,7 +227,13 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, errors.New("speaker not found")
 	}
 
-	topic, err := s.topicRepository.GetTopicsByIDs(ctx, []int64{unitID}, []int64{topicID})
+	topic, err := s.topicRepository.GetList(ctx, &topicRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		UnitIDs:  []int64{unitID},
+		TopicIDs: []int64{topicID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -206,7 +241,12 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, errors.New("topic not found")
 	}
 
-	units, err := s.unitRepository.GetUnitsByIDs(ctx, []int64{unitID})
+	units, err := s.unitRepository.GetList(ctx, &unitRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		UnitIDs: []int64{unitID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -214,7 +254,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, errors.New("unit not found")
 	}
 
-	count, err := s.meetingRepository.GetSpeakerCountByTopic(ctx, unitID, topicID, speakerID)
+	count, err := s.meetingRepository.GetSpeakerStatByTopic(ctx, unitID, topicID, speakerID)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -244,7 +284,12 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	listeners, err := s.studentRepository.GetStudentByIDs(ctx, []int64{listenerID})
+	listeners, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		IDs: []int64{listenerID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -275,39 +320,6 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 	reply.ParseMode = tgBotAPI.ModeHTML
 
 	return reply, nil
-}
-
-func (s *Service) getBestSpeaker(ctx context.Context, unitID int64, topicID int64, listenerID int64) (int64, error) {
-	stats, err := s.meetingRepository.GetSpeakersStats(ctx, unitID, topicID, listenerID)
-	//	GetList(ctx, &meetingRepository.Query{
-	//	QueryFilter: model.QueryFilter{
-	//		AllData: true,
-	//	},
-	//	TopicIDs:          []int64{topicID},
-	//	ExcludeSpeakerIDs: []int64{listenerID},
-	//})
-	if err != nil {
-		return 0, err
-	}
-
-	speakerID := helper.GetInexperiencedSpeaker(stats)
-	if speakerID == 0 {
-		var speakerInfo *model.Student
-		speakerInfo, err = s.studentRepository.GetRandomStudent(ctx, listenerID)
-		if err != nil {
-			return 0, err
-		}
-		if speakerInfo == nil {
-			return 0, errors.New("no speakers")
-		}
-		if speakerInfo.ID == listenerID {
-			return 0, errors.New("🚫 Что-то кроме тебя я никого пока не знаю:( Зови друзей сюда и начнём движение.")
-		}
-
-		speakerID = speakerInfo.ID
-	}
-
-	return speakerID, nil
 }
 
 func getChoiceModeKeyboard() tgBotAPI.InlineKeyboardMarkup {

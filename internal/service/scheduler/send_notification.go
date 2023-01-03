@@ -10,6 +10,9 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
+	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
+	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
+	unitRepository "github.com/olezhek28/system-design-party-bot/internal/repository/unit"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 )
 
@@ -39,7 +42,12 @@ func (s *Service) sendNotification(ctx context.Context) error {
 	fmt.Printf("i found %d meetings by %v\n", len(meets), startDate)
 
 	for _, meet := range meets {
-		speaker, errMeet := s.studentRepository.GetStudentByIDs(ctx, []int64{meet.SpeakerID})
+		speaker, errMeet := s.studentRepository.GetList(ctx, &studentRepository.Query{
+			QueryFilter: model.QueryFilter{
+				AllData: true,
+			},
+			IDs: []int64{meet.SpeakerID},
+		})
 		if errMeet != nil {
 			return errMeet
 		}
@@ -47,7 +55,12 @@ func (s *Service) sendNotification(ctx context.Context) error {
 			return fmt.Errorf("speaker with id %d not found", meet.SpeakerID)
 		}
 
-		listener, errMeet := s.studentRepository.GetStudentByIDs(ctx, []int64{meet.ListenerID})
+		listener, errMeet := s.studentRepository.GetList(ctx, &studentRepository.Query{
+			QueryFilter: model.QueryFilter{
+				AllData: true,
+			},
+			IDs: []int64{meet.ListenerID},
+		})
 		if errMeet != nil {
 			return errMeet
 		}
@@ -55,7 +68,12 @@ func (s *Service) sendNotification(ctx context.Context) error {
 			return fmt.Errorf("listener with id %d not found", meet.ListenerID)
 		}
 
-		unit, errMeet := s.unitRepository.GetUnitsByIDs(ctx, []int64{meet.UnitID})
+		unit, errMeet := s.unitRepository.GetList(ctx, &unitRepository.Query{
+			QueryFilter: model.QueryFilter{
+				AllData: true,
+			},
+			UnitIDs: []int64{meet.UnitID},
+		})
 		if errMeet != nil {
 			return errMeet
 		}
@@ -63,7 +81,13 @@ func (s *Service) sendNotification(ctx context.Context) error {
 			return fmt.Errorf("unit with id %d not found", meet.UnitID)
 		}
 
-		topic, errMeet := s.topicRepository.GetTopicsByIDs(ctx, []int64{meet.UnitID}, []int64{meet.TopicID})
+		topic, errMeet := s.topicRepository.GetList(ctx, &topicRepository.Query{
+			QueryFilter: model.QueryFilter{
+				AllData: true,
+			},
+			UnitIDs:  []int64{meet.UnitID},
+			TopicIDs: []int64{meet.TopicID},
+		})
 		if errMeet != nil {
 			return errMeet
 		}

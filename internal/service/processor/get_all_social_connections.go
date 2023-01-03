@@ -9,6 +9,7 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
+	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 	"github.com/pkg/errors"
 )
@@ -24,7 +25,11 @@ func (s *Service) GetAllSocialConnections(ctx context.Context, msg *model.Telegr
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	students, err := s.studentRepository.GetStudentList(ctx)
+	students, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

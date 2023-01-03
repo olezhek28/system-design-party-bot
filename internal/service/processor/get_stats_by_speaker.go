@@ -10,7 +10,9 @@ import (
 	"github.com/olezhek28/system-design-party-bot/internal/helper"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	meetingRepository "github.com/olezhek28/system-design-party-bot/internal/repository/meeting"
+	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
 	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
+	unitRepository "github.com/olezhek28/system-design-party-bot/internal/repository/unit"
 	"github.com/olezhek28/system-design-party-bot/internal/template"
 	"github.com/pkg/errors"
 )
@@ -77,7 +79,12 @@ func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMess
 		unitIDs = append(unitIDs, unitID)
 	}
 
-	unitInfo, err := s.unitRepository.GetUnitsByIDs(ctx, unitIDs)
+	unitInfo, err := s.unitRepository.GetList(ctx, &unitRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		UnitIDs: unitIDs,
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
@@ -87,7 +94,12 @@ func (s *Service) GetStatsBySpeaker(ctx context.Context, msg *model.TelegramMess
 		unitMap[unit.ID] = unit
 	}
 
-	speakers, err := s.studentRepository.GetStudentByIDs(ctx, []int64{speakerID})
+	speakers, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		IDs: []int64{speakerID},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}

@@ -12,13 +12,13 @@ import (
 )
 
 func (s *Service) Start(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
-	isExist, err := s.studentRepository.IsExistStudent(ctx, msg.From.ID)
+	isExist, err := s.studentRepository.IsExist(ctx, msg.From.ID)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
 
 	if !isExist {
-		err = s.studentRepository.CreateStudent(ctx, &model.Student{
+		err = s.studentRepository.Create(ctx, &model.Student{
 			FirstName:        msg.From.FirstName,
 			LastName:         msg.From.LastName,
 			TelegramID:       msg.From.ID,

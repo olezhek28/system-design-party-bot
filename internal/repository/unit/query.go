@@ -1,4 +1,4 @@
-package topic_repository
+package unit_repository
 
 import (
 	"fmt"
@@ -11,42 +11,16 @@ const (
 	defaultPageSize = 50
 )
 
-type Pair struct {
-	UnitID  int64
-	TopicID int64
-}
-
 // Query ...
 type Query struct {
 	model.QueryFilter
 
-	UnitIDs  []int64
-	TopicIDs []int64
-	Pairs    map[Pair]struct{}
+	UnitIDs []int64
 }
 
 func (q *Query) executeFilter(builder sq.SelectBuilder) sq.SelectBuilder {
 	if len(q.UnitIDs) > 0 {
-		builder = builder.Where(sq.Eq{"unit_id": q.UnitIDs})
-	}
-	if len(q.TopicIDs) > 0 {
-		builder = builder.Where(sq.Eq{"id": q.TopicIDs})
-	}
-	if len(q.Pairs) > 0 {
-		var andConditions []sq.And
-		for pair := range q.Pairs {
-			andConditions = append(andConditions, sq.And{
-				sq.Eq{"unit_id": pair.UnitID},
-				sq.Eq{"id": pair.TopicID},
-			})
-		}
-
-		orConditions := sq.Or{}
-		for _, condition := range andConditions {
-			orConditions = append(orConditions, condition)
-		}
-
-		builder = builder.Where(orConditions)
+		builder = builder.Where(sq.Eq{"id": q.UnitIDs})
 	}
 
 	if !q.AllData {

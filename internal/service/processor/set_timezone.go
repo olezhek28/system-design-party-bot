@@ -2,12 +2,12 @@ package processor
 
 import (
 	"context"
+	"database/sql"
 	"strconv"
 	"strings"
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
-	"github.com/olezhek28/system-design-party-bot/internal/model/command"
 	"github.com/pkg/errors"
 )
 
@@ -43,12 +43,11 @@ func (s *Service) SetTimezone(ctx context.Context, msg *model.TelegramMessage) (
 
 	timezone := int64(hours*60 + minutes)
 
-	res, err := s.studentRepository.SetTimezone(ctx, msg.From.ID, timezone)
+	err = s.studentRepository.Update(ctx, msg.From.ID, &model.UpdateStudent{
+		Timezone: sql.NullInt64{Int64: timezone, Valid: true},
+	})
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
-	}
-	if res == 0 {
-		return tgBotAPI.NewMessage(msg.From.ID, "Кажется ты не зарегистрирован:( Для этого нажми /"+command.Start), nil
 	}
 
 	return tgBotAPI.NewMessage(msg.From.ID, "Временная зона успешно установлена\n"), nil

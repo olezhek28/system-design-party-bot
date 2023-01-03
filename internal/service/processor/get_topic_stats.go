@@ -5,6 +5,8 @@ import (
 
 	tgBotAPI "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
+	studentRepository "github.com/olezhek28/system-design-party-bot/internal/repository/student"
+	topicRepository "github.com/olezhek28/system-design-party-bot/internal/repository/topic"
 )
 
 func (s *Service) GetTopicStats(ctx context.Context, msg *model.TelegramMessage) (tgBotAPI.MessageConfig, error) {
@@ -127,14 +129,20 @@ func (s *Service) GetTopicStats(ctx context.Context, msg *model.TelegramMessage)
 }
 
 func (s *Service) getTopicMap(ctx context.Context, meets []*model.Meeting) (map[int64]map[int64]*model.Topic, error) {
-	var topicIds []int64
-	var unitIds []int64
-	for _, m := range meets {
-		topicIds = append(topicIds, m.TopicID)
-		unitIds = append(unitIds, m.UnitID)
+	pairs := make(map[topicRepository.Pair]struct{}, len(meets))
+	for _, meet := range meets {
+		pairs[topicRepository.Pair{
+			UnitID:  meet.UnitID,
+			TopicID: meet.TopicID,
+		}] = struct{}{}
 	}
 
-	topicsInfo, err := s.topicRepository.GetTopicsByIDs(ctx, unitIds, topicIds)
+	topicsInfo, err := s.topicRepository.GetList(ctx, &topicRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		Pairs: pairs,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +165,12 @@ func (s *Service) getSpeakerMap(ctx context.Context, meets []*model.Meeting) (ma
 		speakerIds = append(speakerIds, m.SpeakerID)
 	}
 
-	speakersInfo, err := s.studentRepository.GetStudentByIDs(ctx, speakerIds)
+	speakersInfo, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		IDs: speakerIds,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +189,12 @@ func (s *Service) getListenerMap(ctx context.Context, meets []*model.Meeting) (m
 		listenerIds = append(listenerIds, m.ListenerID)
 	}
 
-	listenersInfo, err := s.studentRepository.GetStudentByIDs(ctx, listenerIds)
+	listenersInfo, err := s.studentRepository.GetList(ctx, &studentRepository.Query{
+		QueryFilter: model.QueryFilter{
+			AllData: true,
+		},
+		IDs: listenerIds,
+	})
 	if err != nil {
 		return nil, err
 	}
