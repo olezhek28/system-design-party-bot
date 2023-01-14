@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"os"
 )
 
 const (
@@ -19,8 +18,8 @@ type dbConfig struct {
 }
 
 // GetDBConfig ...
-func GetDBConfig() (DBConfig, error) {
-	dsn := os.Getenv(dsnEnvName)
+func GetDBConfig(isStgEnv bool) (DBConfig, error) {
+	dsn := get(dsnEnvName, isStgEnv)
 	if len(dsn) == 0 {
 		return nil, errors.New("db dsb not found")
 	}

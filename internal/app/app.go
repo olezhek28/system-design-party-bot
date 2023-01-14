@@ -12,9 +12,9 @@ type App struct {
 	serviceProvider *serviceProvider
 }
 
-func New(ctx context.Context) (*App, error) {
+func New(ctx context.Context, isStgEnv bool) (*App, error) {
 	a := &App{
-		serviceProvider: NewServiceProvider(),
+		serviceProvider: NewServiceProvider(isStgEnv),
 	}
 
 	err := a.initDeps(ctx)

@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"os"
 	"strconv"
 )
 
@@ -29,19 +28,19 @@ type telegramConfig struct {
 }
 
 // GetTelegramBotConfig ...
-func GetTelegramBotConfig() (TelegramBotConfig, error) {
-	token := os.Getenv(telegramTokenEnvName)
+func GetTelegramBotConfig(isStgEnv bool) (TelegramBotConfig, error) {
+	token := get(telegramTokenEnvName, isStgEnv)
 	if len(token) == 0 {
 		return nil, errors.New("telegram token not found")
 	}
 
-	offsetStr := os.Getenv(telegramOffsetEnvName)
+	offsetStr := get(telegramOffsetEnvName, isStgEnv)
 	offset, err := strconv.ParseInt(offsetStr, 10, 64)
 	if err != nil || offset == 0 {
 		offset = defaultTelegramOffset
 	}
 
-	timeoutStr := os.Getenv(telegramTimeoutEnvName)
+	timeoutStr := get(telegramTimeoutEnvName, isStgEnv)
 	timeout, err := strconv.ParseInt(timeoutStr, 10, 64)
 	if err != nil || timeout == 0 {
 		timeout = defaultTelegramTimeout
