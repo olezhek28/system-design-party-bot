@@ -20,3 +20,4 @@
 /topic.sql
 /unit.sql
 /.env
+/docker-compose-prod.yml
