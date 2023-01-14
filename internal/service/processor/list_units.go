@@ -77,7 +77,7 @@ func (s *Service) ListUnits(ctx context.Context, msg *model.TelegramMessage) (tg
 	var speakerID int64
 	flag := false
 	if len(msg.Arguments) > 0 {
-		flag, err = strconv.ParseBool(msg.Arguments[0])
+		speakerID, err = strconv.ParseInt(msg.Arguments[0])
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}

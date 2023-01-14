@@ -327,11 +327,7 @@ func getChoiceModeKeyboard() tgBotAPI.InlineKeyboardMarkup {
 		tgBotAPI.NewInlineKeyboardRow(
 			tgBotAPI.NewInlineKeyboardButtonData(
 				fmt.Sprintf("%s Выберу сам", model.GetEmoji(model.TransportEmoji)),
-				fmt.Sprintf("/%s %t", command.GetStudents, false),
-			),
-			tgBotAPI.NewInlineKeyboardButtonData(
-				fmt.Sprintf("%s Найди плииииз", model.GetEmoji(model.ThingsEmojis)),
-				fmt.Sprintf("/%s %t", command.ListUnits, true),
+				fmt.Sprintf("/%s %t", command.GetStudents, true),
 			),
 		),
 	)
