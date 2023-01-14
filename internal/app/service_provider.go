@@ -54,7 +54,7 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 
 func (s *serviceProvider) GetTelegramClient() telegram.Client {
 	if s.telegramClient == nil {
-		cfg, err := config.NewConfig()
+		cfg, err := config.GetTelegramBotConfig()
 		if err != nil {
 			log.Fatalf("failed to get telegram config: %s", err.Error())
 		}

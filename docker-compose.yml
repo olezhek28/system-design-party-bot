@@ -7,9 +7,9 @@ services:
   db:
     image: postgres:14-alpine3.15
     environment:
-      - "POSTGRES_DB=system-design-party-bot"
-      - "POSTGRES_USER=system-design-party-bot-user"
-      - "POSTGRES_PASSWORD=system-design-party-bot-password"
+      - "POSTGRES_DB=${DB_NAME}"
+      - "POSTGRES_USER=${DB_USER}"
+      - "POSTGRES_PASSWORD=${DB_PASSWORD}"
     ports:
       - "22222:5432"
     volumes:
@@ -18,9 +18,9 @@ services:
   db_test:
     image: postgres:14-alpine3.15
     environment:
-      - "POSTGRES_DB=system-design-party-bot"
-      - "POSTGRES_USER=system-design-party-bot-user"
-      - "POSTGRES_PASSWORD=system-design-party-bot-password"
+      - "POSTGRES_DB=${DB_NAME_STG}"
+      - "POSTGRES_USER=${DB_USER_STG}"
+      - "POSTGRES_PASSWORD=${DB_PASSWORD_STG}"
     ports:
       - "22221:5432"
     volumes:

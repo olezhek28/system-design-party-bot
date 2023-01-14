@@ -11,8 +11,12 @@ import (
 func main() {
 	ctx := context.Background()
 
-	a := app.New()
-	err := a.Run(ctx)
+	a, err := app.New(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	
+	err = a.Run(ctx)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

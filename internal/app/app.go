@@ -4,16 +4,37 @@ import (
 	"context"
 	"log"
 	"sync"
+
+	"github.com/olezhek28/system-design-party-bot/internal/config"
 )
 
 type App struct {
 	serviceProvider *serviceProvider
 }
 
-func New() *App {
-	return &App{
+func New(ctx context.Context) (*App, error) {
+	a := &App{
 		serviceProvider: NewServiceProvider(),
 	}
+
+	err := a.initDeps(ctx)
+
+	return a, err
+}
+
+func (a *App) initDeps(ctx context.Context) error {
+	inits := []func(context.Context) error{
+		config.Init,
+	}
+
+	for _, f := range inits {
+		err := f(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (a *App) Run(ctx context.Context) error {
