@@ -17,7 +17,8 @@ import (
 )
 
 type serviceProvider struct {
-	db db.Client
+	db       db.Client
+	isStgEnv bool
 
 	telegramClient telegram.Client
 
@@ -30,13 +31,15 @@ type serviceProvider struct {
 	schedulerService *scheduler.Service
 }
 
-func NewServiceProvider() *serviceProvider {
-	return &serviceProvider{}
+func NewServiceProvider(isStgEnv bool) *serviceProvider {
+	return &serviceProvider{
+		isStgEnv: isStgEnv,
+	}
 }
 
 func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	if s.db == nil {
-		cfg, err := config.GetDBConfig()
+		cfg, err := config.GetDBConfig(s.isStgEnv)
 		if err != nil {
 			log.Fatalf("failed to get db config: %s", err.Error())
 		}
@@ -54,7 +57,7 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 
 func (s *serviceProvider) GetTelegramClient() telegram.Client {
 	if s.telegramClient == nil {
-		cfg, err := config.NewConfig()
+		cfg, err := config.GetTelegramBotConfig(s.isStgEnv)
 		if err != nil {
 			log.Fatalf("failed to get telegram config: %s", err.Error())
 		}

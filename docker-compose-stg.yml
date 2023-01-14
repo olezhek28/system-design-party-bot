@@ -1,0 +1,16 @@
+version: '3.9'
+
+volumes:
+  postgres_volume_stg:
+
+services:
+  db_stg:
+    image: postgres:14-alpine3.15
+    environment:
+      - "POSTGRES_DB=${DB_NAME_STG}"
+      - "POSTGRES_USER=${DB_USER_STG}"
+      - "POSTGRES_PASSWORD=${DB_PASSWORD_STG}"
+    ports:
+      - "22221:5432"
+    volumes:
+      - postgres_volume_stg:/var/lib/postgresql/data_stg

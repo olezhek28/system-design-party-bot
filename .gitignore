@@ -14,10 +14,10 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 .idea
-/internal/config/db.go
-/internal/config/telegram_bot.go
 /bot
 /meeting.sql
 /student.sql
 /topic.sql
 /unit.sql
+/.env
+/docker-compose-prod.yml

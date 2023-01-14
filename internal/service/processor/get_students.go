@@ -23,16 +23,16 @@ func (s *Service) GetStudents(ctx context.Context, msg *model.TelegramMessage) (
 		return tgBotAPI.MessageConfig{}, err
 	}
 
-	autoChoiceSpeaker := true
+	var stubFlag bool
 	if len(msg.Arguments) == 1 {
-		autoChoiceSpeaker, err = strconv.ParseBool(msg.Arguments[0])
+		stubFlag, err = strconv.ParseBool(msg.Arguments[0])
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
 		}
 	}
 
 	tmpl := template.StudentStatsDescription
-	if !autoChoiceSpeaker {
+	if stubFlag {
 		tmpl = template.StudentCreateMeetingDescription
 	}
 
@@ -47,8 +47,8 @@ func (s *Service) GetStudents(ctx context.Context, msg *model.TelegramMessage) (
 
 	reply := tgBotAPI.NewMessage(msg.From.ID, t)
 	reply.ReplyMarkup = getStudentsWithStatsKeyboard(students)
-	if !autoChoiceSpeaker {
-		reply.ReplyMarkup = getStudentsWithListUnitsKeyboard(excludeStudents(students, []int64{msg.From.ID}), msg.Arguments)
+	if stubFlag {
+		reply.ReplyMarkup = getStudentsWithListUnitsKeyboard(excludeStudents(students, []int64{msg.From.ID}))
 	}
 
 	return reply, nil
@@ -72,7 +72,7 @@ func getStudentsWithStatsKeyboard(students []*model.Student) tgBotAPI.InlineKeyb
 	return helper.BuildKeyboard(buttonsInfo, 2)
 }
 
-func getStudentsWithListUnitsKeyboard(students []*model.Student, args []string) tgBotAPI.InlineKeyboardMarkup {
+func getStudentsWithListUnitsKeyboard(students []*model.Student) tgBotAPI.InlineKeyboardMarkup {
 	var buttonsInfo []*model.TelegramButtonInfo
 	for _, st := range students {
 		text, err := getStudentText(st)
@@ -83,7 +83,7 @@ func getStudentsWithListUnitsKeyboard(students []*model.Student, args []string) 
 
 		buttonsInfo = append(buttonsInfo, &model.TelegramButtonInfo{
 			Text: text,
-			Data: fmt.Sprintf("/%s %s %d", command.ListUnits, helper.SliceToString(args), st.ID),
+			Data: fmt.Sprintf("/%s %d", command.ListUnits, st.ID),
 		})
 	}
 

@@ -32,7 +32,7 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 	}
 
 	if len(msg.Arguments) == 0 {
-		reply := tgBotAPI.NewMessage(msg.From.ID, "Сам выберешь партнёра или мне подыскать наилучший варик?\n")
+		reply := tgBotAPI.NewMessage(msg.From.ID, "Выберешь партнёра?\n")
 		reply.ReplyMarkup = getChoiceModeKeyboard()
 		return reply, nil
 	}
@@ -56,19 +56,6 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 		speakerID, err = strconv.ParseInt(msg.Arguments[2], 10, 64)
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
-		}
-
-		var listenerID int64
-		listenerID, err = strconv.ParseInt(msg.Arguments[3], 10, 64)
-		if err != nil {
-			return tgBotAPI.MessageConfig{}, err
-		}
-
-		if speakerID == 0 {
-			speakerID, err = s.getBestSpeaker(ctx, unitID, topicID, listenerID)
-			if err != nil {
-				return tgBotAPI.MessageConfig{}, err
-			}
 		}
 
 		var speakersInfo []*model.Student
@@ -182,13 +169,6 @@ func (s *Service) CreateMeeting(ctx context.Context, msg *model.TelegramMessage)
 	if err != nil {
 		return tgBotAPI.MessageConfig{}, err
 	}
-
-	//if speakerID == 0 {
-	//	speakerID, err = s.getBestSpeaker(ctx, topicID, listenerID)
-	//	if err != nil {
-	//		return tgBotAPI.MessageConfig{}, err
-	//	}
-	//}
 
 	meetingID1, err := s.meetingRepository.Create(ctx, &model.Meeting{
 		UnitID:     unitID,
@@ -326,12 +306,8 @@ func getChoiceModeKeyboard() tgBotAPI.InlineKeyboardMarkup {
 	return tgBotAPI.NewInlineKeyboardMarkup(
 		tgBotAPI.NewInlineKeyboardRow(
 			tgBotAPI.NewInlineKeyboardButtonData(
-				fmt.Sprintf("%s Выберу сам", model.GetEmoji(model.TransportEmoji)),
-				fmt.Sprintf("/%s %t", command.GetStudents, false),
-			),
-			tgBotAPI.NewInlineKeyboardButtonData(
-				fmt.Sprintf("%s Найди плииииз", model.GetEmoji(model.ThingsEmojis)),
-				fmt.Sprintf("/%s %t", command.ListUnits, true),
+				fmt.Sprintf("%s Выберу", model.GetEmoji(model.TransportEmoji)),
+				fmt.Sprintf("/%s %t", command.GetStudents, true),
 			),
 		),
 	)

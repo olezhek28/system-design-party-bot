@@ -1,3 +1,6 @@
+include .env
+export
+
 .PHONY: test-coverage
 test-coverage:
 	go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
@@ -7,7 +10,7 @@ update-all-deps:
 	go get -u ./... && go mod tidy
 
 LOCAL_MIGRATION_DIR=./migrations
-LOCAL_MIGRATION_DSN="host=localhost port=22222 dbname=system-design-party-bot user=system-design-party-bot-user password=system-design-party-bot-password sslmode=disable"
+LOCAL_MIGRATION_DSN=$(DB_DSN_STG)
 
 .PHONY: install-goose
 .install-goose:
@@ -24,3 +27,15 @@ local-migration-up:
 .PHONY: local-migration-down
 local-migration-down:
 	goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} down -v
+
+.PHONY: compose-up
+compose-up:
+	docker-compose -f docker-compose-stg.yml up -d
+
+.PHONY: compose-down
+compose-down:
+	docker-compose -f docker-compose-stg.yml down
+
+.PHONY: build
+build:
+	go build -o bot cmd/bot/main.go

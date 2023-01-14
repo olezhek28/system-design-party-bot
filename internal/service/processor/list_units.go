@@ -75,20 +75,10 @@ func (s *Service) ListUnits(ctx context.Context, msg *model.TelegramMessage) (tg
 
 	listenerID := users[0].ID
 	var speakerID int64
-	flag := false
 	if len(msg.Arguments) > 0 {
-		flag, err = strconv.ParseBool(msg.Arguments[0])
+		speakerID, err = strconv.ParseInt(msg.Arguments[0], 10, 64)
 		if err != nil {
 			return tgBotAPI.MessageConfig{}, err
-		}
-	}
-
-	if !flag {
-		if len(msg.Arguments) == 2 {
-			speakerID, err = strconv.ParseInt(msg.Arguments[1], 10, 64)
-			if err != nil {
-				return tgBotAPI.MessageConfig{}, err
-			}
 		}
 	}
 

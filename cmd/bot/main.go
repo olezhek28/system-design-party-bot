@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"time"
 
@@ -11,8 +12,20 @@ import (
 func main() {
 	ctx := context.Background()
 
-	a := app.New()
-	err := a.Run(ctx)
+	isStgEnvPtr := flag.Bool("stg-config-enabled", false, "use staging environment")
+	flag.Parse()
+
+	var isStgEnv bool
+	if isStgEnvPtr != nil {
+		isStgEnv = *isStgEnvPtr
+	}
+
+	a, err := app.New(ctx, isStgEnv)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = a.Run(ctx)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
