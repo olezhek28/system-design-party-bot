@@ -35,3 +35,7 @@ compose-up:
 .PHONY: compose-down
 compose-down:
 	docker-compose -f docker-compose-stg.yml down
+
+.PHONY: build
+build:
+	go build -o bot cmd/bot/main.go
