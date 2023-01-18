@@ -7,8 +7,10 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/olezhek28/system-design-party-bot/internal/model"
 	"github.com/olezhek28/system-design-party-bot/internal/pkg/db"
+	"github.com/pkg/errors"
 )
 
 const tableName = "student"
@@ -137,11 +139,14 @@ func (r *repository) IsExist(ctx context.Context, telegramChatID int64) (bool, e
 		QueryRaw: query,
 	}
 
-	var ids []int64
-	err = r.db.DB().SelectContext(ctx, &ids, q, v...)
+	var id int64
+	err = r.db.DB().QueryRowContext(ctx, q, v...).Scan(&id)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, nil
+		}
 		return false, err
 	}
 
-	return len(ids) > 0, nil
+	return id > 0, nil
 }
